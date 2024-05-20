@@ -1,6 +1,10 @@
 name: Build
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Tag version to release"
+        required: true
   push:
     paths-ignore:
       - "docs/**"
@@ -13,13 +17,12 @@ on:
   pull_request_target:
     branches:
       - Alpha
-      
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: true
   
 env:
-  REGISTRY: docker.io
+  REGISTRY: ghcr.io
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,8 +46,6 @@ jobs:
           - { goos: linux, goarch: mipsle, mips: softfloat, output: mipsle-softfloat }
           - { goos: linux, goarch: mips64, output: mips64 }
           - { goos: linux, goarch: mips64le, output: mips64le }
-          - { goos: linux, goarch: loong64, output: loong64-abi1, abi: '1' }
-          - { goos: linux, goarch: loong64, output: loong64-abi2, abi: '2' }
           - { goos: linux, goarch: riscv64, output: riscv64 }
           - { goos: linux, goarch: s390x, output: s390x }
 
@@ -58,34 +59,6 @@ jobs:
           - { goos: freebsd, goarch: amd64, goamd64: v1, output: amd64-compatible }
           - { goos: freebsd, goarch: amd64, goamd64: v3, output: amd64 }
           - { goos: freebsd, goarch: arm64, output: arm64 }
-
-          - { goos: android, goarch: '386', ndk: i686-linux-android34, output: '386' }
-          - { goos: android, goarch: amd64, ndk: x86_64-linux-android34, output: amd64 }
-          - { goos: android, goarch: arm, ndk: armv7a-linux-androideabi34, output: armv7 }
-          - { goos: android, goarch: arm64, ndk: aarch64-linux-android34, output: arm64-v8 }
-
-          # Go 1.21 can revert commit `9e4385` to work on Windows 7
-          # https://github.com/golang/go/issues/64622#issuecomment-1847475161
-          # (OR we can just use golang1.21.4 which unneeded any patch)
-          - { goos: windows, goarch: '386', output: '386-go121', goversion: '1.21' }
-          - { goos: windows, goarch: amd64, goamd64: v1, output: amd64-compatible-go121, goversion: '1.21' }
-          - { goos: windows, goarch: amd64, goamd64: v3, output: amd64-go121, goversion: '1.21' }
-
-          # Go 1.20 is the last release that will run on any release of Windows 7, 8, Server 2008 and Server 2012. Go 1.21 will require at least Windows 10 or Server 2016.
-          - { goos: windows, goarch: '386', output: '386-go120', goversion: '1.20' }
-          - { goos: windows, goarch: amd64, goamd64: v1, output: amd64-compatible-go120, goversion: '1.20' }
-          - { goos: windows, goarch: amd64, goamd64: v3, output: amd64-go120, goversion: '1.20' }
-
-          # Go 1.20 is the last release that will run on macOS 10.13 High Sierra or 10.14 Mojave. Go 1.21 will require macOS 10.15 Catalina or later.
-          - { goos: darwin, goarch: arm64, output: arm64-go120, goversion: '1.20' }
-          - { goos: darwin, goarch: amd64, goamd64: v1, output: amd64-compatible-go120, goversion: '1.20' }
-          - { goos: darwin, goarch: amd64, goamd64: v3, output: amd64-go120, goversion: '1.20' }
-
-          # only for test
-          - { goos: linux, goarch: '386', output: '386-go120', goversion: '1.20' }
-          - { goos: linux, goarch: amd64, goamd64: v1, output: amd64-compatible-go120, goversion: '1.20', test: test }
-          - { goos: linux, goarch: amd64, goamd64: v3, output: amd64-go120, goversion: '1.20' }
-
     steps:
     - uses: actions/checkout@v4
 
@@ -138,13 +111,13 @@ jobs:
         curl https://github.com/golang/go/commit/9e43850a3298a9b8b1162ba0033d4c53f8637571.diff | patch --verbose -R -p 1
 
     - name: Set variables
-      if: ${{github.ref_name=='Alpha'}}
-      run: echo "VERSION=alpha-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+      run: echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set variables
-      if: ${{github.ref_name=='' || github.ref_type=='tag'}}
-      run: echo "VERSION=$(git describe --tags)" >> $GITHUB_ENV
+      if: ${{ github.event_name != 'workflow_dispatch' && github.ref_name == 'Alpha' }}
+      run: echo "VERSION=alpha-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       shell: bash
 
     - name: Set Time Variable
@@ -197,68 +170,6 @@ jobs:
           rm mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}
         fi
 
-    - name: Create DEB package
-      if: ${{ matrix.jobs.goos == 'linux' && !contains(matrix.jobs.goarch, 'mips') }}
-      run: |
-        sudo apt-get install dpkg
-        if [ "${{matrix.jobs.abi}}" = "1" ]; then
-          ARCH=loongarch64
-        else
-          ARCH=${{matrix.jobs.goarch}}
-        fi
-        PackageVersion=$(curl -s "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | grep -o '"tag_name": "[^"]*' | grep -o '[^"]*$' | sed 's/v//g' )
-        if [ $(git branch | awk -F ' ' '{print $2}') = "Alpha" ]; then
-          PackageVersion="$(echo "${PackageVersion}" | awk -F '.' '{$NF = $NF + 1; print}' OFS='.')-${VERSION}"
-        fi
-
-        mkdir -p mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/DEBIAN
-        mkdir -p mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/usr/bin
-        mkdir -p mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/etc/mihomo
-        mkdir -p mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/etc/systemd/system/
-        mkdir -p mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/usr/share/licenses/mihomo
-
-        cp mihomo mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/usr/bin/mihomo
-        cp LICENSE mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/usr/share/licenses/mihomo/
-        cp .github/mihomo.service mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/etc/systemd/system/
-
-        cat > mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/etc/mihomo/config.yaml <<EOF
-        mixed-port: 7890
-        external-controller: 127.0.0.1:9090
-        EOF
-
-        cat > mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}/DEBIAN/control <<EOF
-        Package: mihomo
-        Version: ${PackageVersion}
-        Section:
-        Priority: extra
-        Architecture: ${ARCH}
-        Maintainer: MetaCubeX <none@example.com>
-        Homepage: https://wiki.metacubex.one/
-        Description: The universal proxy platform.
-        EOF
-
-        dpkg-deb -Z gzip --build mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}
-
-    - name: Convert DEB to RPM
-      if: ${{ matrix.jobs.goos == 'linux' && !contains(matrix.jobs.goarch, 'mips') }}
-      run: |
-        sudo apt-get install -y alien
-        alien --to-rpm --scripts mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}.deb
-        mv mihomo*.rpm mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}.rpm
-
-    # - name: Convert DEB to PKG
-    #   if: ${{ matrix.jobs.goos == 'linux' && !contains(matrix.jobs.goarch, 'mips') && !contains(matrix.jobs.goarch, 'loong64') }}
-    #   run: |
-    #     docker pull archlinux
-    #     docker run --rm -v ./:/mnt archlinux bash -c "
-    #       pacman -Syu pkgfile base-devel --noconfirm
-    #       curl -L https://github.com/helixarch/debtap/raw/master/debtap > /usr/bin/debtap
-    #       chmod 755 /usr/bin/debtap
-    #       debtap -u 
-    #       debtap -Q /mnt/mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}.deb
-    #     "
-    #     mv mihomo*.pkg.tar.zst mihomo-${{matrix.jobs.goos}}-${{matrix.jobs.output}}-${VERSION}.pkg.tar.zst
-
     - name: Save version
       run: |
         echo ${VERSION} > version.txt
@@ -267,7 +178,7 @@ jobs:
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.jobs.goos }}-${{ matrix.jobs.output }}
+        name: '${{ matrix.jobs.goos }}-${{ matrix.jobs.output }}'
         path: |
           mihomo*.gz
           mihomo*.deb
@@ -277,7 +188,7 @@ jobs:
 
   Upload-Prerelease:
     permissions: write-all
-    if: ${{ github.ref_type == 'branch' && !startsWith(github.event_name, 'pull_request') }}
+    if: ${{ github.event_name != 'workflow_dispatch' && github.ref_type == 'branch' && !startsWith(github.event_name, 'pull_request') }}
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -328,44 +239,62 @@ jobs:
 
   Upload-Release:
     permissions: write-all
-    if: ${{ github.ref_type=='tag' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: Meta
+          fetch-depth: '0'
+          fetch-tags: 'true'
 
-    - name: Get tags
-      run: |
-        echo "CURRENTVERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-        git fetch --tags
-        echo "PREVERSION=$(git describe --tags --abbrev=0 HEAD^)" >> $GITHUB_ENV
+      - name: Get tags
+        run: |
+          echo "CURRENTVERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          git fetch --tags
+          echo "PREVERSION=$(git describe --tags --abbrev=0 HEAD)" >> $GITHUB_ENV
 
-    - name: Generate release notes
-      run: |
-          cp ./.github/genReleaseNote.sh ./
-          bash ./genReleaseNote.sh -v ${PREVERSION}...${CURRENTVERSION}
-          rm ./genReleaseNote.sh
+      - name: Merge Alpha branch into Meta
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git fetch origin Alpha:Alpha
+          git merge Alpha
+          git push origin Meta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: actions/download-artifact@v4
-      with:
-        path: bin/
-        merge-multiple: true
+      - name: Tag the commit
+        run: |
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: bin
-
-    - name: Upload Release
-      uses: softprops/action-gh-release@v1
-      if: ${{  success() }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        files: bin/*
-        generate_release_notes: true
-        body_path: release.md
+      - name: Generate release notes
+        run: |
+            cp ./.github/genReleaseNote.sh ./
+            bash ./genReleaseNote.sh -v ${PREVERSION}...${CURRENTVERSION}
+            rm ./genReleaseNote.sh
+  
+      - uses: actions/download-artifact@v4
+        with:
+          path: bin/
+          merge-multiple: true
+  
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: bin
+  
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ success() }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          files: bin/*
+          body_path: release.md
 
   Docker:
     if: ${{ !startsWith(github.event_name, 'pull_request') }}
@@ -394,15 +323,30 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           version: latest
-
+          
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
-        id: meta
+        id: meta_alpha
+        if:  ${{ github.event_name != 'workflow_dispatch' }}
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}
-
+          images: '${{ env.REGISTRY }}/${{ github.repository }}'
+      
+      # Extract metadata (tags, labels) for Docker
+      # https://github.com/docker/metadata-action
+      - name: Extract Docker metadata
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+        id: meta_release
+        uses: docker/metadata-action@v5
+        with:
+          images: '${{ env.REGISTRY }}/${{ github.repository }}'
+          tags: |
+            ${{ github.event.inputs.version }}
+          flavor: |
+            latest=true
+          labels: org.opencontainers.image.version=${{ github.event.inputs.version }}
+          
       - name: Show files
         run: |
           ls .
@@ -411,14 +355,12 @@ jobs:
       - name: login to docker REGISTRY
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
       - name: Build and push Docker image
-        id: build-and-push
+        if:  ${{ github.event_name != 'workflow_dispatch' }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -429,5 +371,20 @@ jobs:
             linux/amd64
             linux/arm64
             linux/arm/v7
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_alpha.outputs.tags }}
+          labels: ${{ steps.meta_alpha.outputs.labels }}
+          
+      - name: Build and push Docker image
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: |
+            linux/386
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
+          tags: ${{ steps.meta_release.outputs.tags }}
+          labels: ${{ steps.meta_release.outputs.labels }}
