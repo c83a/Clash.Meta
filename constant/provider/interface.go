@@ -54,9 +54,6 @@ func (pt ProviderType) String() string {
 		return "Unknown"
 	}
 }
-type AgroupBase interface{
-	DropCache()
-}
 // Provider interface
 type Provider interface {
 	Name() string
@@ -77,7 +74,7 @@ type ProxyProvider interface {
 	Version() uint32
 	RegisterHealthCheckTask(url string, expectedStatus utils.IntRanges[uint16], filter string, interval uint)
 	HealthCheckURL() string
-	AddFollower(AgroupBase)
+	AddFollower(chan <- struct{})
 }
 
 // RuleProvider interface

@@ -43,7 +43,7 @@ type proxySetProvider struct {
 	version          uint32
 	subscriptionInfo *SubscriptionInfo
 	locker		 sync.Mutex
-	follower	 map[types.AgroupBase]struct{}
+	follower	 map[chan<- struct{}]struct{}
 }
 
 func (pp *proxySetProvider) MarshalJSON() ([]byte, error) {
@@ -274,7 +274,7 @@ func (cp *compatibleProvider) RegisterHealthCheckTask(url string, expectedStatus
 	cp.healthCheck.registerHealthCheckTask(url, expectedStatus, filter, interval)
 }
 
-func (cp *compatibleProvider) AddFollower(gp types.AgroupBase) {
+func (cp *compatibleProvider) AddFollower(ch chan<- struct{}) {
 }
 
 func stopCompatibleProvider(pd *CompatibleProvider) {
@@ -301,22 +301,28 @@ func NewCompatibleProvider(name string, proxies []C.Proxy, hc *HealthCheck) (*Co
 	return wrapper, nil
 }
 
-func (pp *proxySetProvider)  AddFollower(gp types.AgroupBase) {
+func (pp *proxySetProvider)  AddFollower(ch chan<- struct{}) {
 	pp.locker.Lock()
 	defer pp.locker.Unlock()
 	if len(pp.follower) != 0{
-		pp.follower[gp]=struct{}{}
+		pp.follower[ch]=struct{}{}
 	}else{
-		pp.follower=make(map[types.AgroupBase]struct{})
-		pp.follower[gp]=struct{}{}
+		pp.follower=make(map[chan<- struct{}] struct{})
+		pp.follower[ch]=struct{}{}
 	}
 }
 
 func (pp *proxySetProvider)  updateFollowerCache() {
 	pp.locker.Lock()
 	defer pp.locker.Unlock()
+	void := struct{}{}
 	for k:= range pp.follower{
-		k.DropCache()
+		select{
+		case k <- void:
+			//pass
+		default:
+			//pass
+		}
 	}
 
 }
