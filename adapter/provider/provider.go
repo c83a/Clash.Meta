@@ -313,9 +313,12 @@ func (pp *proxySetProvider)  AddFollower(gp types.AgroupBase) {
 }
 
 func (pp *proxySetProvider)  updateFollowerCache() {
+	pp.locker.Lock()
+	defer pp.locker.Unlock()
 	for k:= range pp.follower{
 		k.DropCache()
 	}
+
 }
 
 func proxiesOnUpdate(pd *proxySetProvider) func([]C.Proxy) {
