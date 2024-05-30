@@ -80,7 +80,7 @@ func (pp *proxySetProvider) Update() error {
 }
 
 func (pp *proxySetProvider) Initial() error {
-	pp.follower=make(map[types.AgroupBase]struct{})
+	pp.follower = nil
 	elm, err := pp.Fetcher.Initial()
 	if err != nil {
 		return err
@@ -305,7 +305,12 @@ func NewCompatibleProvider(name string, proxies []C.Proxy, hc *HealthCheck) (*Co
 func (pp *proxySetProvider)  AddFollower(gp types.AgroupBase) {
 	pp.locker.Lock()
 	defer pp.locker.Unlock()
-	pp.follower[gp]=struct{}{}
+	if len(pp.follower) != 0{
+		pp.follower[gp]=struct{}{}
+	}else{
+		pp.follower=make(map[types.AgroupBase]struct{})
+		pp.follower[gp]=struct{}{}
+	}
 }
 
 func (pp *proxySetProvider)  updateFollowerCache() {
