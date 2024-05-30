@@ -100,14 +100,16 @@ func (gb *GroupBase) GetProxies(touch bool) []C.Proxy {
 				pd.Touch()
 		}
 	}
-	if len(gb.cached_proxies)!= 0  {
-		return gb.cached_proxies
+	proxies := gb.cached_proxies
+	if len(proxies)!= 0  {
+		return proxies
 	}
-	gb.cached_proxies = gb._GetProxies(false)
+	proxies = gb._GetProxies(false)
+	gb.cached_proxies = proxies
 	for _, pd := range gb.providers {
 		pd.AddFollower(gb)
 	}
-	return gb.cached_proxies
+	return proxies
 
 }
 
