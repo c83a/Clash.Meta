@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"sync"
 
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/common/convert"
@@ -27,7 +28,6 @@ import (
 const (
 	ReservedName = "default"
 )
-
 type ProxySchema struct {
 	Proxies []map[string]any `yaml:"proxies"`
 }
@@ -36,13 +36,14 @@ type ProxySchema struct {
 type ProxySetProvider struct {
 	*proxySetProvider
 }
-
 type proxySetProvider struct {
 	*resource.Fetcher[[]C.Proxy]
 	proxies          []C.Proxy
 	healthCheck      *HealthCheck
 	version          uint32
 	subscriptionInfo *SubscriptionInfo
+	locker		 sync.Mutex
+	follower	 map[types.AgroupBase]struct{}
 }
 
 func (pp *proxySetProvider) MarshalJSON() ([]byte, error) {
@@ -79,6 +80,7 @@ func (pp *proxySetProvider) Update() error {
 }
 
 func (pp *proxySetProvider) Initial() error {
+	pp.follower=make(map[types.AgroupBase]struct{})
 	elm, err := pp.Fetcher.Initial()
 	if err != nil {
 		return err
@@ -273,6 +275,9 @@ func (cp *compatibleProvider) RegisterHealthCheckTask(url string, expectedStatus
 	cp.healthCheck.registerHealthCheckTask(url, expectedStatus, filter, interval)
 }
 
+func (cp *compatibleProvider) AddFollower(gp types.AgroupBase) {
+}
+
 func stopCompatibleProvider(pd *CompatibleProvider) {
 	pd.healthCheck.close()
 }
@@ -297,11 +302,24 @@ func NewCompatibleProvider(name string, proxies []C.Proxy, hc *HealthCheck) (*Co
 	return wrapper, nil
 }
 
+func (pp *proxySetProvider)  AddFollower(gp types.AgroupBase) {
+	pp.locker.Lock()
+	defer pp.locker.Unlock()
+	pp.follower[gp]=struct{}{}
+}
+
+func (pp *proxySetProvider)  updateFollowerCache() {
+	for k:= range pp.follower{
+		k.DropCache()
+	}
+}
+
 func proxiesOnUpdate(pd *proxySetProvider) func([]C.Proxy) {
 	return func(elm []C.Proxy) {
 		pd.setProxies(elm)
 		pd.version += 1
 		pd.getSubscriptionInfo()
+		pd.updateFollowerCache()
 	}
 }
 

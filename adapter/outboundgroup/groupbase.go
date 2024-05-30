@@ -30,6 +30,7 @@ type GroupBase struct {
 	failedTime       time.Time
 	failedTesting    atomic.Bool
 	proxies          [][]C.Proxy
+	cached_proxies   []C.Proxy
 	versions         []atomic.Uint32
 	TestTimeout      int
 	maxFailedTimes   int
@@ -94,6 +95,27 @@ func (gb *GroupBase) Touch() {
 }
 
 func (gb *GroupBase) GetProxies(touch bool) []C.Proxy {
+	if touch {
+		for _, pd := range gb.providers {
+				pd.Touch()
+		}
+	}
+	if len(gb.cached_proxies)!= 0  {
+		return gb.cached_proxies
+	}
+	gb.cached_proxies = gb._GetProxies(false)
+	for _, pd := range gb.providers {
+		pd.AddFollower(gb)
+	}
+	return gb.cached_proxies
+
+}
+
+func (gb *GroupBase) DropCache() {
+	gb.cached_proxies = nil
+}
+
+func (gb *GroupBase) _GetProxies(touch bool) []C.Proxy {
 	var proxies []C.Proxy
 	if len(gb.filterRegs) == 0 {
 		for _, pd := range gb.providers {
