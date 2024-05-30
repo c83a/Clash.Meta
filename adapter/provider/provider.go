@@ -80,7 +80,6 @@ func (pp *proxySetProvider) Update() error {
 }
 
 func (pp *proxySetProvider) Initial() error {
-	pp.follower = nil
 	elm, err := pp.Fetcher.Initial()
 	if err != nil {
 		return err
