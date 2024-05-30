@@ -239,7 +239,7 @@ jobs:
 
   Upload-Release:
     permissions: write-all
-    if: 1 == 0 && ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+    if: false && ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -297,7 +297,7 @@ jobs:
           body_path: release.md
 
   Docker:
-    if: 1 == 0 && ${{ !startsWith(github.event_name, 'pull_request') }}
+    if: false && ${{ !startsWith(github.event_name, 'pull_request') }}
     permissions: write-all
     needs: [build]
     runs-on: ubuntu-latest
