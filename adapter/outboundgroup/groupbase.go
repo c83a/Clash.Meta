@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"runtime"
 
 	"github.com/metacubex/mihomo/adapter/outbound"
 	"github.com/metacubex/mihomo/common/atomic"
@@ -120,20 +121,22 @@ func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
 	}
 	chProxies := make(chan []C.Proxy)
 	chDirtyCache := make(chan struct{},1)
+	chDone := make(chan struct{})
 	for _, pd := range gb.providers {
 		pd.AddFollower(chDirtyCache)
 	}
 	gb.ChProxies = chProxies
 	gb.ChDirtyCache = chDirtyCache
+	runtime.SetFinalizer(gb,func(x any){chDone <- struct{}{}})
 	gb.cached_proxies = gb._GetProxies(false)
 	go func(){for {
 		select{
 		case <- gb.ChDirtyCache:
 				gb.cached_proxies = gb._GetProxies(false)
-				gb.ChProxies <- gb.cached_proxies
-		default:
-				gb.ChProxies <- gb.cached_proxies
-
+		case gb.ChProxies <- gb.cached_proxies:
+			//pass
+		case <- chDone:
+			return
 		}}
 	}()
 	return  gb.cached_proxies
