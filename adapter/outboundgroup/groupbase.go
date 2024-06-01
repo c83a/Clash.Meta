@@ -103,19 +103,19 @@ func (gb *GroupBase) GetProxies(touch bool)([]C.Proxy ){
 				pd.Touch()
 		}
 	}
-	if gb.ChDirtyCache != nil {
+	if gb.ChProxies != nil {
 		return  <- gb.ChProxies
 	}
 	return  gb.GetProxiesCH()
 }
 
 func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
-	if gb.ChDirtyCache != nil {
+	if gb.ChProxies != nil {
 		return  <- gb.ChProxies
 	}
 	gb.locker.Lock()
 	defer gb.locker.Unlock()
-	if gb.ChDirtyCache != nil {
+	if gb.ChProxies != nil {
 		return  <- gb.ChProxies
 	}
 	chProxies := make(chan []C.Proxy)
