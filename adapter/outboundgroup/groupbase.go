@@ -31,7 +31,9 @@ type GroupBase struct {
 	failedTesting    atomic.Bool
 	proxies          [][]C.Proxy
 	cached_proxies   []C.Proxy
-	dirtyCache       chan struct{}
+	ChDirtyCache     chan struct{}
+	ChProxies        chan []C.Proxy
+	locker           sync.Mutex
 	versions         []atomic.Uint32
 	TestTimeout      int
 	maxFailedTimes   int
@@ -95,32 +97,44 @@ func (gb *GroupBase) Touch() {
 	}
 }
 
-func (gb *GroupBase) GetProxies(touch bool) []C.Proxy {
+func (gb *GroupBase) GetProxies(touch bool)([]C.Proxy ){
 	if touch {
 		for _, pd := range gb.providers {
 				pd.Touch()
 		}
 	}
-	var proxies []C.Proxy
-	if gb.dirtyCache != nil{
-		select{
-		case <- gb.dirtyCache:
-			proxies = gb._GetProxies(false)
-			gb.cached_proxies = proxies
-		default:
-			proxies = gb.cached_proxies
+	return  gb.GetProxiesCH()
+}
 
-		}
-	}else{
-		gb.dirtyCache = make(chan struct{},3)
-		for _, pd := range gb.providers {
-			pd.AddFollower(gb.dirtyCache)
-		}
-		proxies = gb._GetProxies(false)
-		gb.cached_proxies = proxies
+func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
+	if gb.ChDirtyCache != nil {
+		return  <- gb.ChProxies
 	}
-	return proxies
+	gb.locker.Lock()
+	defer gb.locker.Unlock()
+	if gb.ChDirtyCache != nil {
+		return  <- gb.ChProxies
+	}
+	chProxies := make(chan []C.Proxy)
+	chDirtyCache := make(chan struct{},1)
+	for _, pd := range gb.providers {
+		pd.AddFollower(chDirtyCache)
+	}
+	gb.ChProxies = chProxies
+	gb.ChDirtyCache = chDirtyCache
+	gb.cached_proxies = gb._GetProxies(false)
+	go func(){for {
+		select{
+		case <- gb.ChDirtyCache:
+				proxies := gb._GetProxies(false)
+				gb.cached_proxies = proxies
+				gb.ChProxies <- proxies
+		default:
+				gb.ChProxies <- gb.cached_proxies
 
+		}}
+	}()
+	return  gb.cached_proxies
 }
 
 func (gb *GroupBase) _GetProxies(touch bool) []C.Proxy {
