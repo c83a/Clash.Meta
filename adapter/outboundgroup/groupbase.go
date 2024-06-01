@@ -103,6 +103,9 @@ func (gb *GroupBase) GetProxies(touch bool)([]C.Proxy ){
 				pd.Touch()
 		}
 	}
+	if gb.ChDirtyCache != nil {
+		return  <- gb.ChProxies
+	}
 	return  gb.GetProxiesCH()
 }
 
@@ -126,9 +129,8 @@ func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
 	go func(){for {
 		select{
 		case <- gb.ChDirtyCache:
-				proxies := gb._GetProxies(false)
-				gb.cached_proxies = proxies
-				gb.ChProxies <- proxies
+				gb.cached_proxies = gb._GetProxies(false)
+				gb.ChProxies <- gb.cached_proxies
 		default:
 				gb.ChProxies <- gb.cached_proxies
 
