@@ -136,6 +136,7 @@ func (lb *LoadBalance) IsL3Protocol(metadata *C.Metadata) bool {
 
 func strategyRoundRobin(url string) strategyFn {
 	atleast := 32
+	last := 0
 	pxch := make(chan C.Proxy)
 	stopCh := make(chan struct{},1)
 	idxMutex := sync.Mutex{}
@@ -152,7 +153,7 @@ func strategyRoundRobin(url string) strategyFn {
 				return p
 			default:
 			}
-			var proxies_alive []C.Proxy
+			proxies_alive := make([]C.Proxy, last/4*4+4)
 			f:=func(n int,pxs []C.Proxy){
 				for i:=0; i<n; i++{
 					for _, px := range(pxs){
@@ -168,12 +169,14 @@ func strategyRoundRobin(url string) strategyFn {
 				proxies_alive = append(proxies_alive, py)
 			}
 			len_alive := len(proxies_alive)
+			last = len_alive
 			if len_alive != 0{
 				n := (atleast / len_alive) + 1
 				go f(n, proxies_alive)
 				return proxies_alive[len_alive - 1]
 			}
 			len_all := len(proxies)
+			last = 0
 			n := (atleast / len_all) + 1
 			go f(n, proxies)
 			return  proxies[len_all - 1]
