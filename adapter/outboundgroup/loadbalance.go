@@ -168,14 +168,13 @@ func strategyRoundRobin(url string) strategyFn {
 				if !py.AliveForTestUrl(url) {continue}
 				proxies_alive = append(proxies_alive, py)
 			}
-			last_alive := len(proxies_alive)
+			last_alive = len(proxies_alive)
 			if last_alive != 0{
 				n := (atleast / last_alive) + 1
 				go f(n, proxies_alive)
 				return proxies_alive[last_alive - 1]
 			}
 			len_all := len(proxies)
-			last_alive = 0
 			n := (atleast / len_all) + 1
 			go f(n, proxies)
 			return  proxies[len_all - 1]
