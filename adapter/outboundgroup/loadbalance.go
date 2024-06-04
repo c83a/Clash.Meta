@@ -170,7 +170,7 @@ func strategyRoundRobin(url string) strategyFn {
 					}}
 				}
 				}()
-				return <- pxch
+				return proxies_alive[len_alive - 1]
 			}
 			p = proxies[0]
 			go func(){
