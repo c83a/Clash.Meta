@@ -135,7 +135,7 @@ func (lb *LoadBalance) IsL3Protocol(metadata *C.Metadata) bool {
 }
 
 func strategyRoundRobin(url string) strategyFn {
-	atleast := 10
+	atleast := 32
 	pxch := make(chan C.Proxy)
 	stopCh := make(chan struct{},1)
 	idxMutex := sync.Mutex{}
