@@ -153,6 +153,16 @@ func strategyRoundRobin(url string) strategyFn {
 			default:
 			}
 			var proxies_alive []C.Proxy
+			f:=func(n int,pxs []C.Proxy){
+				for i:=0; i<n; i++{
+					for _, px := range(pxs){
+					select{
+						case pxch <- px:
+						case <- stopCh:
+							return
+					}}
+				}
+			}
 			for _, py := range(proxies){
 				if !py.AliveForTestUrl(url) {continue}
 				proxies_alive = append(proxies_alive, py)
@@ -160,31 +170,14 @@ func strategyRoundRobin(url string) strategyFn {
 			len_alive := len(proxies_alive)
 			if len_alive != 0{
 				n := (atleast / len_alive) + 1
-				go func(){
-				for i:=0; i<n; i++{
-					for _, px := range(proxies_alive){
-					select{
-						case pxch <- px:
-						case <- stopCh:
-							return
-					}}
-				}
-				}()
+				go f(n, proxies_alive)
 				return proxies_alive[len_alive - 1]
 			}
-			p = proxies[0]
-			go func(){
-			for i:=0; i<atleast; i++{
-				select{
-				case pxch <- p:
-					//pass
-				case <- stopCh:
-					return
-				}
-			}}()
-			return p
+			len_all := len(proxies)
+			n := (atleast / len_all) + 1
+			go f(n, proxies)
+			return  proxies[len_all - 1]
 		}
-		return proxies[0]
 	}
 	runtime.SetFinalizer(&f, func(x any){stopCh <- struct{}{}})
 	return f
