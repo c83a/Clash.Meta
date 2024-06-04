@@ -139,6 +139,7 @@ func strategyRoundRobin(url string) strategyFn {
 	pxch := make(chan C.Proxy)
 	stopCh := make(chan struct{},1)
 	idxMutex := sync.Mutex{}
+	last_alive := 0
 	f := func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
 		var p C.Proxy
 		select{
@@ -152,7 +153,7 @@ func strategyRoundRobin(url string) strategyFn {
 				return p
 			default:
 			}
-			var proxies_alive []C.Proxy
+			proxies_alive := make([]C.Proxy,0,last_alive/4*4+4)
 			f:=func(n int,pxs []C.Proxy){
 				for i:=0; i<n; i++{
 					for _, px := range(pxs){
@@ -167,13 +168,14 @@ func strategyRoundRobin(url string) strategyFn {
 				if !py.AliveForTestUrl(url) {continue}
 				proxies_alive = append(proxies_alive, py)
 			}
-			len_alive := len(proxies_alive)
-			if len_alive != 0{
-				n := (atleast / len_alive) + 1
+			last_alive := len(proxies_alive)
+			if last_alive != 0{
+				n := (atleast / last_alive) + 1
 				go f(n, proxies_alive)
-				return proxies_alive[len_alive - 1]
+				return proxies_alive[last_alive - 1]
 			}
 			len_all := len(proxies)
+			last_alive = 0
 			n := (atleast / len_all) + 1
 			go f(n, proxies)
 			return  proxies[len_all - 1]
