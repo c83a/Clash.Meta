@@ -273,11 +273,10 @@ func (gb *GroupBase) URLTest(ctx context.Context, url string, expectedStatus uti
 	}
 	wg.Wait()
 
-	if len(mp) == 0 {
+	if len(mp)==0{
 		return mp, fmt.Errorf("get delay: all proxies timeout")
-	} else {
-		return mp, nil
 	}
+	return mp, nil
 }
 
 func (gb *GroupBase) onDialFailed(adapterType C.AdapterType, err error) {

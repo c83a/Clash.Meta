@@ -8,6 +8,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"runtime"
 
 	"github.com/metacubex/mihomo/adapter/outbound"
 	"github.com/metacubex/mihomo/common/callback"
@@ -134,32 +135,59 @@ func (lb *LoadBalance) IsL3Protocol(metadata *C.Metadata) bool {
 }
 
 func strategyRoundRobin(url string) strategyFn {
-	idx := 0
+	atleast := 10
+	pxch := make(chan C.Proxy)
+	stopCh := make(chan struct{},1)
 	idxMutex := sync.Mutex{}
-	return func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
-		idxMutex.Lock()
-		defer idxMutex.Unlock()
-
-		i := 0
-		length := len(proxies)
-
-		if touch {
-			defer func() {
-				idx = (idx + i) % length
-			}()
-		}
-
-		for ; i < length; i++ {
-			id := (idx + i) % length
-			proxy := proxies[id]
-			if proxy.AliveForTestUrl(url) {
-				i++
-				return proxy
+	f := func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
+		var p C.Proxy
+		select{
+		case p = <- pxch:
+			return p
+		default:
+			idxMutex.Lock()
+			defer idxMutex.Unlock()
+			select{
+			case p = <- pxch:
+				return p
+			default:
 			}
+			var proxies_alive []C.Proxy
+			for _, py := range(proxies){
+				if !py.AliveForTestUrl(url) {continue}
+				proxies_alive = append(proxies_alive, py)
+			}
+			len_alive := len(proxies_alive)
+			if len_alive != 0{
+				n := (atleast / len_alive) + 1
+				go func(){
+				for i:=0; i<n; i++{
+					for _, px := range(proxies_alive){
+					select{
+						case pxch <- px:
+						case <- stopCh:
+							return
+					}}
+				}
+				}()
+				return <- pxch
+			}
+			p = proxies[0]
+			go func(){
+			for i:=0; i<atleast; i++{
+				select{
+				case pxch <- p:
+					//pass
+				case <- stopCh:
+					return
+				}
+			}}()
+			return p
 		}
-
 		return proxies[0]
 	}
+	runtime.SetFinalizer(&f, func(x any){stopCh <- struct{}{}})
+	return f
 }
 
 func strategyConsistentHashing(url string) strategyFn {
