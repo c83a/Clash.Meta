@@ -13,7 +13,7 @@ import (
 	C "github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/log"
 
-	"github.com/dlclark/regexp2"
+//	"github.com/dlclark/regexp2"
 )
 
 type HealthCheckOption struct {
@@ -52,6 +52,8 @@ func (hc *HealthCheck) process() {
 	for {
 		select {
 		case <-ticker.C:
+			hc.check()
+			/*
 			lastTouch := hc.lastTouch.Load()
 			since := time.Since(lastTouch)
 			if !hc.lazy || since < hc.interval {
@@ -59,6 +61,7 @@ func (hc *HealthCheck) process() {
 			} else {
 				log.Debugln("Skip once health check because we are lazy")
 			}
+			*/
 		case <-hc.done:
 			ticker.Stop()
 			hc.stop()
@@ -171,11 +174,11 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 		return
 	}
 
-	var filterReg *regexp2.Regexp
+	//var filterReg *regexp2.Regexp
 	var expectedStatus utils.IntRanges[uint16]
 	if option != nil {
 		expectedStatus = option.expectedStatus
-		if len(option.filters) != 0 {
+/*		if len(option.filters) != 0 {
 			filters := make([]string, 0, len(option.filters))
 			for filter := range option.filters {
 				filters = append(filters, filter)
@@ -183,17 +186,19 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 
 			filterReg = regexp2.MustCompile(strings.Join(filters, "|"), regexp2.None)
 		}
-	}
+	*/}
 
 	for _, proxy := range hc.proxies {
 		// skip proxies that do not require health check
-		if filterReg != nil {
-			if match, _ := filterReg.MatchString(proxy.Name()); !match {
+		p := proxy
+		if p.AliveForTestUrl(url){
+			continue}
+/*		if filterReg != nil {
+			if match, _ := filterReg.MatchString(p.Name()); !match {
 				continue
 			}
 		}
-
-		p := proxy
+*/
 		b.Go(p.Name(), func() (bool, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), hc.timeout)
 			defer cancel()

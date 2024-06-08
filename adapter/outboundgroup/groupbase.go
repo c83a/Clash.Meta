@@ -97,11 +97,6 @@ func (gb *GroupBase) Touch() {
 }
 
 func (gb *GroupBase) GetProxies(touch bool)([]C.Proxy ){
-	if touch {
-		for _, pd := range gb.providers {
-				pd.Touch()
-		}
-	}
 	if gb.ChProxies != nil {
 		return  <- gb.ChProxies
 	}
