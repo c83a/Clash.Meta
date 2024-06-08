@@ -266,6 +266,13 @@ func (p *Proxy) URLTest(ctx context.Context, url string, expectedStatus utils.In
 	t = uint16(time.Since(start) / time.Millisecond)
 	return
 }
+func NewProxy2(adapter C.ProxyAdapter) *Proxy {
+	return &Proxy{
+		ProxyAdapter: adapter,
+		history:      queue.New[C.DelayHistory](defaultHistoriesNum),
+		alive:        atomic.NewBool(false),
+		extra:        xsync.NewMapOf[string, *internalProxyState]()}
+}
 func NewProxy(adapter C.ProxyAdapter) *Proxy {
 	return &Proxy{
 		ProxyAdapter: adapter,
