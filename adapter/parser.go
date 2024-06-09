@@ -163,5 +163,5 @@ func ParseProxy(mapping map[string]any) (C.Proxy, error) {
 		}
 	}
 
-	return NewProxy2(proxy), nil
+	return NewProxy(proxy), nil
 }

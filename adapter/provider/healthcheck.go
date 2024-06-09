@@ -23,7 +23,6 @@ type HealthCheckOption struct {
 
 type extraOption struct {
 	expectedStatus utils.IntRanges[uint16]
-	filters        map[string]struct{}
 }
 
 type HealthCheck struct {
@@ -52,6 +51,7 @@ func (hc *HealthCheck) process() {
 	for {
 		select {
 		case <-ticker.C:
+			hc.lazy =! hc.lazy
 			hc.check()
 			/*
 			lastTouch := hc.lastTouch.Load()
@@ -94,34 +94,12 @@ func (hc *HealthCheck) registerHealthCheckTask(url string, expectedStatus utils.
 	}
 
 	// prioritize the use of previously registered configurations, especially those from provider
-	if _, ok := hc.extra[url]; ok {
-		// provider default health check does not set filter
-		if url != hc.url && len(filter) != 0 {
-			splitAndAddFiltersToExtra(filter, hc.extra[url])
-		}
 
-		log.Debugln("health check url: %s exists", url)
-		return
-	}
-
-	option := &extraOption{filters: map[string]struct{}{}, expectedStatus: expectedStatus}
-	splitAndAddFiltersToExtra(filter, option)
+	option := &extraOption{expectedStatus: expectedStatus}
 	hc.extra[url] = option
 
 	if hc.auto() && !hc.started.Load() {
 		go hc.process()
-	}
-}
-
-func splitAndAddFiltersToExtra(filter string, option *extraOption) {
-	filter = strings.TrimSpace(filter)
-	if len(filter) != 0 {
-		for _, regex := range strings.Split(filter, "`") {
-			regex = strings.TrimSpace(regex)
-			if len(regex) != 0 {
-				option.filters[regex] = struct{}{}
-			}
-		}
 	}
 }
 
@@ -152,7 +130,7 @@ func (hc *HealthCheck) check() {
 		b, _ := batch.New[bool](context.Background(), batch.WithConcurrencyNum[bool](10))
 
 		// execute default health check
-		option := &extraOption{filters: nil, expectedStatus: hc.expectedStatus}
+		option := &extraOption{expectedStatus: hc.expectedStatus}
 		hc.execute(b, hc.url, id, option)
 
 		// execute extra health check
@@ -176,6 +154,7 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 
 	//var filterReg *regexp2.Regexp
 	var expectedStatus utils.IntRanges[uint16]
+	lazy := ! hc.lazy
 	if option != nil {
 		expectedStatus = option.expectedStatus
 /*		if len(option.filters) != 0 {
@@ -191,7 +170,7 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 	for _, proxy := range hc.proxies {
 		// skip proxies that do not require health check
 		p := proxy
-		if p.AliveForTestUrl(url){
+		if lazy && p.AliveForTestUrl(url){
 			continue}
 /*		if filterReg != nil {
 			if match, _ := filterReg.MatchString(p.Name()); !match {
