@@ -157,27 +157,13 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 	lazy := ! hc.lazy
 	if option != nil {
 		expectedStatus = option.expectedStatus
-/*		if len(option.filters) != 0 {
-			filters := make([]string, 0, len(option.filters))
-			for filter := range option.filters {
-				filters = append(filters, filter)
-			}
-
-			filterReg = regexp2.MustCompile(strings.Join(filters, "|"), regexp2.None)
-		}
-	*/}
+	}
 
 	for _, proxy := range hc.proxies {
 		// skip proxies that do not require health check
 		p := proxy
 		if lazy && p.AliveForTestUrl(url){
 			continue}
-/*		if filterReg != nil {
-			if match, _ := filterReg.MatchString(p.Name()); !match {
-				continue
-			}
-		}
-*/
 		b.Go(p.Name(), func() (bool, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), hc.timeout)
 			defer cancel()
@@ -211,6 +197,6 @@ func NewHealthCheck(proxies []C.Proxy, url string, timeout uint, interval uint, 
 		lazy:           lazy,
 		expectedStatus: expectedStatus,
 		done:           make(chan struct{}, 1),
-		singleDo:       singledo.NewSingle[struct{}](time.Second),
+		singleDo:       singledo.NewSingle[struct{}](5 * time.Second),
 	}
 }
