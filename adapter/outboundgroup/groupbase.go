@@ -120,11 +120,11 @@ func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
 	}
 	gb.ChProxies = chProxies
 	runtime.SetFinalizer(gb,func(x any){chDone <- struct{}{}})
-	cached_proxies := gb._GetProxies(false)
+	cached_proxies := gb._GetProxies(make([]C.Proxy,0,2))
 	go func(){for {
 		select{
 		case <- chDirtyCache:
-				cached_proxies = gb._GetProxies(false)
+			cached_proxies = gb._GetProxies(cached_proxies[:0])
 		case chProxies <- cached_proxies:
 			//pass
 		case <- chDone:
@@ -134,21 +134,22 @@ func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
 	return  cached_proxies
 }
 
-func (gb *GroupBase) _GetProxies(touch bool) []C.Proxy {
-	var proxies []C.Proxy
+func (gb *GroupBase) _GetProxies(proxies []C.Proxy) []C.Proxy {
+//	var proxies []C.Proxy
 	if len(gb.filterRegs) == 0 {
 		for _, pd := range gb.providers {
-			if touch {
+/*			if touch {
 				pd.Touch()
 			}
+*/
 			proxies = append(proxies, pd.Proxies()...)
 		}
 	} else {
 		for i, pd := range gb.providers {
-			if touch {
+/*			if touch {
 				pd.Touch()
 			}
-
+*/
 			if pd.VehicleType() == types.Compatible {
 				gb.versions[i].Store(pd.Version())
 				gb.proxies[i] = pd.Proxies()
