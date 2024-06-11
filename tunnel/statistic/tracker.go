@@ -9,11 +9,12 @@ import (
 	"github.com/metacubex/mihomo/common/atomic"
 	"github.com/metacubex/mihomo/common/buf"
 	N "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/common/utils"
+//	"github.com/metacubex/mihomo/common/utils"
 	C "github.com/metacubex/mihomo/constant"
 	"sync"
+	"strconv"
 
-	"github.com/gofrs/uuid/v5"
+//	"github.com/gofrs/uuid/v5"
 )
 
 type Tracker interface {
@@ -24,7 +25,7 @@ type Tracker interface {
 }
 
 type TrackerInfo struct {
-	UUID          uuid.UUID    `json:"id"`
+	UUID          string       `json:"id"`
 	Metadata      *C.Metadata  `json:"metadata"`
 	UploadTotal   atomic.Int64 `json:"upload"`
 	DownloadTotal atomic.Int64 `json:"download"`
@@ -34,10 +35,13 @@ type TrackerInfo struct {
 	RulePayload   string       `json:"rulePayload"`
 }
 var tInfoPool sync.Pool
+var tInfoN atomic.Int64
 func init(){
 	tInfoPool = sync.Pool{
 		New: func()any{
-			return &TrackerInfo{}
+			return &TrackerInfo{
+			UUID: strconv.FormatInt(int64(tInfoN.Add(1)),16),
+			}
 		},
 	}
 }
@@ -50,7 +54,7 @@ type tcpTracker struct {
 }
 
 func (tt *tcpTracker) ID() string {
-	return tt.UUID.String()
+	return tt.UUID
 }
 
 func (tt *tcpTracker) Info() *TrackerInfo {
@@ -145,7 +149,7 @@ func NewTCPTracker(conn C.Conn, manager *Manager, metadata *C.Metadata, rule C.R
 		metadata.RemoteDst = parseRemoteDestination(conn.RemoteAddr(), conn)
 	}
 	ti := tInfoPool.Get().(*TrackerInfo)
-	ti.UUID = utils.NewUUIDV4()
+	// ti.UUID = utils.NewUUIDV4()
 	ti.Start = time.Now()
 	ti.Metadata = metadata
 	ti.Chain = conn.Chains()
@@ -200,7 +204,7 @@ type udpTracker struct {
 }
 
 func (ut *udpTracker) ID() string {
-	return ut.UUID.String()
+	return ut.UUID
 }
 
 func (ut *udpTracker) Info() *TrackerInfo {
@@ -251,7 +255,7 @@ func NewUDPTracker(conn C.PacketConn, manager *Manager, metadata *C.Metadata, ru
 	metadata.RemoteDst = parseRemoteDestination(nil, conn)
 
 	ti := tInfoPool.Get().(*TrackerInfo)
-	ti.UUID = utils.NewUUIDV4()
+	// ti.UUID = utils.NewUUIDV4()
 	ti.Start = time.Now()
 	ti.Metadata = metadata
 	ti.Chain = conn.Chains()
