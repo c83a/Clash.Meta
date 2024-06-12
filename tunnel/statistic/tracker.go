@@ -9,6 +9,7 @@ import (
 	"github.com/metacubex/mihomo/common/atomic"
 	"github.com/metacubex/mihomo/common/buf"
 	N "github.com/metacubex/mihomo/common/net"
+	"github.com/metacubex/mihomo/adapter/inbound"
 //	"github.com/metacubex/mihomo/common/utils"
 	C "github.com/metacubex/mihomo/constant"
 	"sync"
@@ -122,6 +123,7 @@ func (tt *tcpTracker) UnwrapWriter() (io.Writer, []N.CountFunc) {
 
 func (tt *tcpTracker) Close() error {
 	tt.manager.Leave(tt)
+	inbound.Putm(tt.TrackerInfo.Metadata)
 	tInfoPool.Put(tt.TrackerInfo)
 	return tt.Conn.Close()
 }
@@ -244,6 +246,7 @@ func (ut *udpTracker) WriteTo(b []byte, addr net.Addr) (int, error) {
 
 func (ut *udpTracker) Close() error {
 	ut.manager.Leave(ut)
+	inbound.Putm(ut.TrackerInfo.Metadata)
 	tInfoPool.Put(ut.TrackerInfo)
 	return ut.PacketConn.Close()
 }

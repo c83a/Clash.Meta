@@ -12,6 +12,7 @@ import (
 	"github.com/metacubex/mihomo/component/dialer"
 	"github.com/metacubex/mihomo/component/resolver"
 	C "github.com/metacubex/mihomo/constant"
+	"github.com/metacubex/mihomo/adapter/inbound"
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
 )
@@ -35,7 +36,8 @@ func NewByName(proxyName string, dialer C.Dialer) (C.Dialer, error) {
 }
 
 func (p proxyDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	currentMeta := &C.Metadata{Type: C.INNER}
+	currentMeta := inbound.Getm()
+	currentMeta.Type=C.INNER
 	if err := currentMeta.SetRemoteAddress(address); err != nil {
 		return nil, err
 	}
@@ -70,7 +72,11 @@ func (p proxyDialer) DialContext(ctx context.Context, network, address string) (
 }
 
 func (p proxyDialer) ListenPacket(ctx context.Context, network, address string, rAddrPort netip.AddrPort) (net.PacketConn, error) {
-	currentMeta := &C.Metadata{Type: C.INNER, DstIP: rAddrPort.Addr(), DstPort: rAddrPort.Port()}
+	currentMeta := inbound.Getm()
+	currentMeta.Type=C.INNER
+	currentMeta.DstIP=rAddrPort.Addr()
+	currentMeta.DstPort=rAddrPort.Port()
+//	currentMeta := &C.Metadata{Type: C.INNER, DstIP: rAddrPort.Addr(), DstPort: rAddrPort.Port()}
 	return p.listenPacket(ctx, currentMeta)
 }
 

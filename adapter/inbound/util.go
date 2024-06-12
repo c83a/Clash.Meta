@@ -6,15 +6,44 @@ import (
 	"net/netip"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/metacubex/mihomo/common/nnip"
 	C "github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/transport/socks5"
 )
+var mPool sync.Pool
+func init(){
+	mPool = sync.Pool{New :func()any{
+		return &C.Metadata{}
+		},
+	}
+}
+func Getm() *C.Metadata{
+	m:=mPool.Get().(*C.Metadata)
+	if m.DstPort > 0{
+		s:= ""
+	m.DstGeoIP = nil
+	m.DstIPASN = s
+	m.InName = s
+	m.InUser = s
+	m.Host = s
+	m.Process = s
+	m.ProcessPath = s
+	m.SpecialProxy = s
+	m.SpecialRules = s
+	m.RemoteDst = s
+	m.SniffHost = s
+	// clean
+	}
+	return m
+}
 
+func Putm(m *C.Metadata){
+	mPool.Put(m)
+}
 func parseSocksAddr(target socks5.Addr) *C.Metadata {
-	metadata := &C.Metadata{}
-
+	metadata := Getm()
 	switch target[0] {
 	case socks5.AtypDomainName:
 		// trim for FQDN
@@ -47,17 +76,23 @@ func parseHTTPAddr(request *http.Request) *C.Metadata {
 		uint16Port = uint16(port)
 	}
 
-	metadata := &C.Metadata{
+	m := Getm()
+	m.NetWork=C.TCP
+	m.Host=host
+	m.DstPort= uint16Port
+/*	metadata := &C.Metadata{
 		NetWork: C.TCP,
 		Host:    host,
 		DstIP:   netip.Addr{},
 		DstPort: uint16Port,
 	}
-
+*/
 	ip, err := netip.ParseAddr(host)
 	if err == nil {
-		metadata.DstIP = ip
+		m.DstIP = ip
+	}else{
+		m.DstIP = netip.Addr{}
 	}
 
-	return metadata
+	return m
 }

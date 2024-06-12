@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
+	"github.com/metacubex/mihomo/adapter/inbound"
 
 	N "github.com/metacubex/mihomo/common/net"
 	C "github.com/metacubex/mihomo/constant"
@@ -23,7 +24,7 @@ func HandleTcp(address string, proxy string) (conn net.Conn, err error) {
 	// executor Parsed
 	conn1, conn2 := N.Pipe()
 
-	metadata := &C.Metadata{}
+	metadata := inbound.Getm()
 	metadata.NetWork = C.TCP
 	metadata.Type = C.INNER
 	metadata.DNSMode = C.DNSNormal
