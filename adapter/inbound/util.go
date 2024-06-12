@@ -22,8 +22,13 @@ func init(){
 func Getm() *C.Metadata{
 	m:=mPool.Get().(*C.Metadata)
 	if m.DstPort > 0{
-		s:= ""
 	m.DstGeoIP = nil
+	m.SrcPort = 0
+	m.DstPort = 0
+	m.InPort = 0
+	m.DSCP = 0
+	m.Uid = 0
+		s:= ""
 	m.DstIPASN = s
 	m.InName = s
 	m.InUser = s
@@ -34,7 +39,25 @@ func Getm() *C.Metadata{
 	m.SpecialRules = s
 	m.RemoteDst = s
 	m.SniffHost = s
+	/*
+	SrcPort      uint16     `json:"sourcePort,string"`      // `,string` is used to compatible with old version json output
+	DstPort      uint16     `json:"destinationPort,string"` // `,string` is used to compatible with old version json output
+	InPort       uint16     `json:"inboundPort,string"` // `,string` is used to compatible with old version json output
+	DSCP         uint8      `json:"dscp"`
+	Uid          uint32     `json:"uid"`
+	DstIPASN     string     `json:"destinationIPASN"`
+	InName       string     `json:"inboundName"`
+	InUser       string     `json:"inboundUser"`
+	Host         string     `json:"host"`
+	Process      string     `json:"process"`
+	ProcessPath  string     `json:"processPath"`
+	SpecialProxy string     `json:"specialProxy"`
+	SpecialRules string     `json:"specialRules"`
+	RemoteDst    string     `json:"remoteDestination"`
+	// Only domain rule
+	SniffHost string `json:"sniffHost"`
 	// clean
+	*/
 	}
 	return m
 }

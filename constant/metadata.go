@@ -133,26 +133,25 @@ type Metadata struct {
 	Type         Type       `json:"type"`
 	SrcIP        netip.Addr `json:"sourceIP"`
 	DstIP        netip.Addr `json:"destinationIP"`
+	InIP         netip.Addr `json:"inboundIP"`
 	DstGeoIP     []string   `json:"destinationGeoIP"` // can be nil if never queried, empty slice if got no result
-	DstIPASN     string     `json:"destinationIPASN"`
+	RawDstAddr net.Addr `json:"-"`
+	RawSrcAddr net.Addr `json:"-"`
 	SrcPort      uint16     `json:"sourcePort,string"`      // `,string` is used to compatible with old version json output
 	DstPort      uint16     `json:"destinationPort,string"` // `,string` is used to compatible with old version json output
-	InIP         netip.Addr `json:"inboundIP"`
 	InPort       uint16     `json:"inboundPort,string"` // `,string` is used to compatible with old version json output
+	DSCP         uint8      `json:"dscp"`
+	Uid          uint32     `json:"uid"`
+	DNSMode      DNSMode    `json:"dnsMode"`
+	DstIPASN     string     `json:"destinationIPASN"`
 	InName       string     `json:"inboundName"`
 	InUser       string     `json:"inboundUser"`
 	Host         string     `json:"host"`
-	DNSMode      DNSMode    `json:"dnsMode"`
-	Uid          uint32     `json:"uid"`
 	Process      string     `json:"process"`
 	ProcessPath  string     `json:"processPath"`
 	SpecialProxy string     `json:"specialProxy"`
 	SpecialRules string     `json:"specialRules"`
 	RemoteDst    string     `json:"remoteDestination"`
-	DSCP         uint8      `json:"dscp"`
-
-	RawSrcAddr net.Addr `json:"-"`
-	RawDstAddr net.Addr `json:"-"`
 	// Only domain rule
 	SniffHost string `json:"sniffHost"`
 }
