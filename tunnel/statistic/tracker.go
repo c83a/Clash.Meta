@@ -37,11 +37,15 @@ type TrackerInfo struct {
 }
 var tInfoPool sync.Pool
 func init(){
-	var tInfoN atomic.Int64
+	ch := make(chan int64)
+	go func(){
+		var i int64 = 0
+		for{ ch <- i; i += 1}
+		}()
 	tInfoPool = sync.Pool{
 		New: func()any{
 			return &TrackerInfo{
-			UUID: strconv.FormatInt(tInfoN.Add(1),16),
+			UUID: strconv.FormatInt(<-ch,16),
 			}
 		},
 	}
