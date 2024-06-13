@@ -4,10 +4,11 @@ import (
 //	"os"
 	"time"
 	"runtime"
+	"sync"
 
 	"github.com/metacubex/mihomo/common/atomic"
 
-	"github.com/puzpuzpuz/xsync/v3"
+//	"github.com/puzpuzpuz/xsync/v3"
 //	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -15,7 +16,7 @@ var DefaultManager *Manager
 
 func init() {
 	DefaultManager = &Manager{
-		connections:   xsync.NewMapOf[string, Tracker](),
+//		connections:   xsync.NewMapOf[string, Tracker](),
 		uploadTemp:    atomic.NewInt64(0),
 		downloadTemp:  atomic.NewInt64(0),
 		uploadBlip:    atomic.NewInt64(0),
@@ -29,7 +30,7 @@ func init() {
 }
 
 type Manager struct {
-	connections   *xsync.MapOf[string, Tracker]
+	connections   sync.Map
 	uploadTemp    atomic.Int64
 	downloadTemp  atomic.Int64
 	uploadBlip    atomic.Int64
@@ -50,14 +51,14 @@ func (m *Manager) Leave(c Tracker) {
 
 func (m *Manager) Get(id string) (c Tracker) {
 	if value, ok := m.connections.Load(id); ok {
-		c = value
+		c = value.(Tracker)
 	}
 	return
 }
 
 func (m *Manager) Range(f func(c Tracker) bool) {
-	m.connections.Range(func(key string, value Tracker) bool {
-		return f(value)
+	m.connections.Range(func(key any, value any) bool {
+		return f(value.(Tracker))
 	})
 }
 
