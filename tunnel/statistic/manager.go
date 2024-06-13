@@ -4,10 +4,11 @@ import (
 //	"os"
 	"time"
 	"runtime"
+	"sync"
 
 	"github.com/metacubex/mihomo/common/atomic"
 
-	"github.com/puzpuzpuz/xsync/v3"
+//	"github.com/puzpuzpuz/xsync/v3"
 //	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -15,7 +16,9 @@ var DefaultManager *Manager
 
 func init() {
 	DefaultManager = &Manager{
-		connections:   xsync.NewMapOf[string, Tracker](),
+		locker:        sync.Mutex{},
+//		connections:   xsync.NewMapOf[string, Tracker](),
+		connections:   make(map[string] Tracker),
 		uploadTemp:    atomic.NewInt64(0),
 		downloadTemp:  atomic.NewInt64(0),
 		uploadBlip:    atomic.NewInt64(0),
@@ -29,7 +32,9 @@ func init() {
 }
 
 type Manager struct {
-	connections   *xsync.MapOf[string, Tracker]
+	locker        sync.Mutex
+//	connections   *xsync.MapOf[string, Tracker]
+	connections   map[string] Tracker
 	uploadTemp    atomic.Int64
 	downloadTemp  atomic.Int64
 	uploadBlip    atomic.Int64
@@ -41,25 +46,49 @@ type Manager struct {
 }
 
 func (m *Manager) Join(c Tracker) {
-	m.connections.Store(c.ID(), c)
+	m.locker.Lock()
+	m.connections[c.ID()]=c
+	m.locker.Unlock()
+
+//	m.connections.Store(c.ID(), c)
 }
 
 func (m *Manager) Leave(c Tracker) {
-	m.connections.Delete(c.ID())
+//	m.connections.Delete(c.ID())
+	m.locker.Lock()
+	defer m.locker.Unlock()
+	id := c.ID()
+	if _, ok := m.connections[id];ok{
+		delete(m.connections,id)
+	}
 }
-
 func (m *Manager) Get(id string) (c Tracker) {
-	if value, ok := m.connections.Load(id); ok {
+/*	if value, ok := m.connections.Load(id); ok {
 		c = value
 	}
+
+*/
+	m.locker.Lock()
+	if value, ok := m.connections[id]; ok {
+		c = value
+	}
+	m.locker.Unlock()
 	return
+
 }
 
 func (m *Manager) Range(f func(c Tracker) bool) {
-	m.connections.Range(func(key string, value Tracker) bool {
+
+	m.locker.Lock()
+	defer m.locker.Unlock()
+	for _, v := range m.connections{
+		f(v)
+	}
+
+/*	m.connections.Range(func(key string, value Tracker) bool {
 		return f(value)
 	})
-}
+*/}
 
 func (m *Manager) PushUploaded(size int64) {
 	m.uploadTemp.Add(size)
