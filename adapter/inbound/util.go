@@ -27,7 +27,9 @@ func Getm() *C.Metadata{
 }
 
 func Putm(m *C.Metadata){
+	t:=m.DstGeoIP[:0]
 	*m = *m0
+	m.DstGeoIP=t
 	mPool.Put(m)
 }
 func parseSocksAddr(target socks5.Addr) *C.Metadata {
