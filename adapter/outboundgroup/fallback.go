@@ -18,6 +18,7 @@ import (
 type Fallback struct {
 	*GroupBase
 	disableUDP     bool
+	hint           int
 	testUrl        string
 	selected       string
 	expectedStatus string
@@ -105,14 +106,22 @@ func (f *Fallback) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 
 func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 	proxies := f.GetProxies(touch)
-	for _, proxy := range proxies {
+	if f.hint < len(proxies){
+		if p:=proxies[f.hint];p.Name() == f.selected &&
+					p.AliveForTestUrl(f.testUrl){
+			return p
+		}
+	}
+	for i, proxy := range proxies {
 		if len(f.selected) == 0 {
 			if proxy.AliveForTestUrl(f.testUrl) {
+				f.hint = i
 				return proxy
 			}
 		} else {
 			if proxy.Name() == f.selected {
 				if proxy.AliveForTestUrl(f.testUrl) {
+					f.hint = i
 					return proxy
 				} else {
 					f.selected = ""
@@ -121,13 +130,16 @@ func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 		}
 	}
 
+	f.hint = 0
 	return proxies[0]
 }
 
 func (f *Fallback) Set(name string) error {
 	var p C.Proxy
-	for _, proxy := range f.GetProxies(false) {
+	var hint int
+	for i, proxy := range f.GetProxies(false) {
 		if proxy.Name() == name {
+			hint = i
 			p = proxy
 			break
 		}
@@ -136,7 +148,7 @@ func (f *Fallback) Set(name string) error {
 	if p == nil {
 		return errors.New("proxy not exist")
 	}
-
+	f.hint = hint
 	f.selected = name
 	if !p.AliveForTestUrl(f.testUrl) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(5000))
@@ -168,6 +180,7 @@ func NewFallback(option *GroupCommonOption, providers []provider.ProxyProvider) 
 			option.MaxFailedTimes,
 			providers,
 		}),
+		hint: 0,
 		disableUDP:     option.DisableUDP,
 		testUrl:        option.URL,
 		expectedStatus: option.ExpectedStatus,
