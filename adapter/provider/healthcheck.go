@@ -153,8 +153,8 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 
 	//var filterReg *regexp2.Regexp
 	var expectedStatus utils.IntRanges[uint16]
-	hc.lazy =! hc.lazy
 	lazy :=  hc.lazy
+	hc.lazy =! lazy
 	if option != nil {
 		expectedStatus = option.expectedStatus
 	}
