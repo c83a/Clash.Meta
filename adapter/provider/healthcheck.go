@@ -51,7 +51,6 @@ func (hc *HealthCheck) process() {
 	for {
 		select {
 		case <-ticker.C:
-			hc.lazy =! hc.lazy
 			hc.check()
 			/*
 			lastTouch := hc.lastTouch.Load()
@@ -154,6 +153,7 @@ func (hc *HealthCheck) execute(b *batch.Batch[bool], url, uid string, option *ex
 
 	//var filterReg *regexp2.Regexp
 	var expectedStatus utils.IntRanges[uint16]
+	hc.lazy =! hc.lazy
 	lazy :=  hc.lazy
 	if option != nil {
 		expectedStatus = option.expectedStatus
