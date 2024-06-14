@@ -32,6 +32,7 @@ type URLTest struct {
 	testUrl        string
 	expectedStatus string
 	tolerance      uint16
+	hint           int
 	disableUDP     bool
 	Hidden         bool
 	Icon           string
@@ -102,14 +103,20 @@ func (u *URLTest) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 }
 
 func (u *URLTest) fast(touch bool) C.Proxy {
-
 	proxies := u.GetProxies(touch)
+	if u.hint <len(proxies){
+		if p:=proxies[u.hint];p.Name() == u.selected&& 
+				p.AliveForTestUrl(u.testUrl){
+			return p
+		}
+	}
 	if u.selected != "" {
-		for _, proxy := range proxies {
+		for i, proxy := range proxies {
 			if !proxy.AliveForTestUrl(u.testUrl) {
 				continue
 			}
 			if proxy.Name() == u.selected {
+				u.hint = i
 				u.fastNode = proxy
 				return proxy
 			}
@@ -118,10 +125,11 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 
 	elm, _, shared := u.fastSingle.Do(func() (C.Proxy, error) {
 		fast := proxies[0]
+		hint := 0
 		minDelay := fast.LastDelayForTestUrl(u.testUrl)
 		fastNotExist := true
 
-		for _, proxy := range proxies[1:] {
+		for i, proxy := range proxies{
 			if u.fastNode != nil && proxy.Name() == u.fastNode.Name() {
 				fastNotExist = false
 			}
@@ -133,6 +141,7 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 			delay := proxy.LastDelayForTestUrl(u.testUrl)
 			if delay < minDelay {
 				fast = proxy
+				hint = i
 				minDelay = delay
 			}
 
@@ -140,6 +149,8 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 		// tolerance
 		if u.fastNode == nil || fastNotExist || !u.fastNode.AliveForTestUrl(u.testUrl) || u.fastNode.LastDelayForTestUrl(u.testUrl) > fast.LastDelayForTestUrl(u.testUrl)+u.tolerance {
 			u.fastNode = fast
+			u.selected = fast.Name()
+			u.hint = hint
 		}
 		return u.fastNode, nil
 	})
