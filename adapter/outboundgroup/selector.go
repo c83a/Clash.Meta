@@ -14,6 +14,7 @@ import (
 type Selector struct {
 	*GroupBase
 	disableUDP bool
+	hint       int
 	selected   string
 	Hidden     bool
 	Icon       string
@@ -72,8 +73,9 @@ func (s *Selector) Now() string {
 }
 
 func (s *Selector) Set(name string) error {
-	for _, proxy := range s.GetProxies(false) {
+	for i, proxy := range s.GetProxies(false) {
 		if proxy.Name() == name {
+			s.hint = i
 			s.selected = name
 			return nil
 		}
@@ -93,8 +95,14 @@ func (s *Selector) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 
 func (s *Selector) selectedProxy(touch bool) C.Proxy {
 	proxies := s.GetProxies(touch)
-	for _, proxy := range proxies {
+	if (s.hint < len(proxies)){
+		if p := proxies[s.hint];p.Name() == s.selected{
+			return p
+		}
+	}
+	for i, proxy := range proxies {
 		if proxy.Name() == s.selected {
+			s.hint = i
 			return proxy
 		}
 	}
@@ -118,6 +126,7 @@ func NewSelector(option *GroupCommonOption, providers []provider.ProxyProvider) 
 			option.MaxFailedTimes,
 			providers,
 		}),
+		hint: 0,
 		selected:   "COMPATIBLE",
 		disableUDP: option.DisableUDP,
 		Hidden:     option.Hidden,
