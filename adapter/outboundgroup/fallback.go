@@ -103,12 +103,16 @@ func (f *Fallback) MarshalJSON() ([]byte, error) {
 func (f *Fallback) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	if f.hint != nil{
 		return f.hint}
+	proxies := f.GetProxies(false)
 	f.locker.Lock()
 	defer f.locker.Unlock()
 	if f.hint != nil{
 		return f.hint}
 	go f.Hint()
-	proxy := f.findAliveProxy(touch)
+	runtime.Gosched()
+	if f.hint != nil{
+		return f.hint}
+	proxy := f._findAliveProxy(proxies)
 	return proxy
 }
 
@@ -118,26 +122,21 @@ func (f *Fallback) Hint(){
 	}
 	chDone := make(chan struct{})
 	chHints := f.chHints
-	f._findAliveProxy()
+	f._findAliveProxy(f.GetProxies(false))
 	runtime.SetFinalizer(f,func(x any){chDone <- struct{}{}})
 	for{select{
 	case <- chHints:
-		f._findAliveProxy()
+		f._findAliveProxy(f.GetProxies(false))
 	case <- chDone:
 		return
 	}}
 }
 func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 	if f.hint != nil{
-		return f.hint
-	}else{
-		runtime.Gosched()
-		if f.hint != nil{ return f.hint}
-		return f._findAliveProxy()
-	}
+		return f.hint}
+	return f.Unwrap(nil, false)
 }
-func (f *Fallback) _findAliveProxy() C.Proxy {
-	proxies := f.GetProxies(false)
+func (f *Fallback) _findAliveProxy(proxies []C.Proxy) C.Proxy {
 	for _, proxy := range proxies {
 		if len(f.selected) == 0 {
 			if proxy.AliveForTestUrl(f.testUrl) {

@@ -110,6 +110,7 @@ func (u *URLTest) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	if u.fastNode != nil{
 		return u.fastNode
 	}
+	proxies := u.GetProxies(false)
 	u.locker.Lock()
 	defer u.locker.Unlock()
 	if u.fastNode != nil{
@@ -120,7 +121,7 @@ func (u *URLTest) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	if u.fastNode != nil{
 		return u.fastNode
 	}
-	return u._fast()
+	return u._fast(proxies)
 }
 
 func (u *URLTest) Hint() {
@@ -130,11 +131,11 @@ func (u *URLTest) Hint() {
 	chDone := make(chan struct{})
 	chHints := make(chan struct{},1)
 	u.chHints = chHints
-	u._fast()
+	u._fast(u.GetProxies(false))
 	runtime.SetFinalizer(u,func(x any){chDone <- struct{}{}})
 	for{select{
 	case <- chHints:
-		u._fast()
+		u._fast(u.GetProxies(false))
 	case <- chDone:
 		return
 	}}
@@ -144,11 +145,10 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 	if u.fastNode != nil{
 		return u.fastNode
 	}
-	return u._fast()
+	return u._fast(u.GetProxies(false))
 }
-func (u *URLTest) _fast() C.Proxy {
+func (u *URLTest) _fast(proxies []C.Proxy) C.Proxy {
 	touch := false
-	proxies := u.GetProxies(false)
 	if u.selected != "" {
 		for _, proxy := range proxies {
 			if !proxy.AliveForTestUrl(u.testUrl) {

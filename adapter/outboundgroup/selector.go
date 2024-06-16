@@ -91,35 +91,45 @@ func (s *Selector) ForceSet(name string) {
 
 // Unwrap implements C.ProxyAdapter
 func (s *Selector) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
-	return s.selectedProxy(touch)
+	if s.hint != nil{
+		return s.hint}
+	proxies := s.GetProxies(false)
+	s.locker.Lock()
+	defer s.locker.Unlock()
+	if s.hint != nil{
+		return s.hint}
+	go s.Hint()
+	runtime.Gosched()
+	if s.hint != nil{
+		return s.hint}
+	proxies = s.GetProxies(false)
+	return s._selectedProxy(proxies)
 }
 
 func (s *Selector) selectedProxy(touch bool) C.Proxy {
 	if s.hint != nil{
 		return s.hint}
-	s.GetProxies(false)
-	s.locker.Lock()
-	defer s.locker.Unlock()
-	go s.Hint()
-	runtime.Gosched()
-	if s.hint != nil{
-		return s.hint}
-	return s._selectedProxy()
+	return s.Unwrap(nil, false)
 }
 func (s *Selector) Hint(){
+	if s.hint != nil{
+		return
+	}
 	chDone := make(chan struct{})
 	chHints := s.GetHints()
-	s._selectedProxy()
+	proxies := s.GetProxies(false)
+	s._selectedProxy(proxies)
 	runtime.SetFinalizer(s, func(x any){chDone <-struct{}{}})
 	for{select {
 	case <-chHints:
-		s._selectedProxy()
+		proxies = s.GetProxies(false)
+		s._selectedProxy(proxies)
 	case <-chDone:
 		return
 	}}
 }
-func (s *Selector) _selectedProxy() C.Proxy {
-	proxies := s.GetProxies(false)
+
+func (s *Selector) _selectedProxy(proxies []C.Proxy) C.Proxy {
 	for _, proxy := range proxies {
 		if proxy.Name() == s.selected {
 			s.hint = proxy

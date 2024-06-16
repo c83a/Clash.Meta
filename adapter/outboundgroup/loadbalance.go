@@ -136,6 +136,9 @@ func (lb *LoadBalance) IsL3Protocol(metadata *C.Metadata) bool {
 }
 
 func (lb *LoadBalance) Hint() {
+	if lb.chAlive != nil{
+		return
+	}
 	var proxies_alive []C.Proxy
 	var pxs []C.Proxy
 	url := lb.testUrl
@@ -176,10 +179,14 @@ func (lb *LoadBalance) Hint() {
 func strategyRoundRobin(lb *LoadBalance, url string) strategyFn {
 	var i atomic.Int64 = atomic.NewInt64(-1)
 	return func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
-	pxs := <- lb.chAlive
-	return pxs[int(i.Add(1)) % len(pxs)]
-}}
+		if lb.chAlive != nil{
+			pxs := <- lb.chAlive
+			return pxs[int(i.Add(1)) % len(pxs)]
+		}
+		return lb.Unwrap( nil, false)
 
+}
+}
 func strategyConsistentHashing(lb *LoadBalance, url string) strategyFn {
 	maxRetry := 5
 	return func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
@@ -249,6 +256,7 @@ func (lb *LoadBalance) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	if lb.chAlive != nil{
 		return lb.strategyFn(proxies, metadata, touch)}
 	go lb.Hint()
+	runtime.Gosched()
 	return lb.strategyFn(proxies, metadata, touch)
 
 }
