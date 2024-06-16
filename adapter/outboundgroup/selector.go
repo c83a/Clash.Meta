@@ -15,7 +15,7 @@ import (
 type Selector struct {
 	*GroupBase
 	disableUDP bool
-	hint       *C.Proxy
+	hint       C.Proxy
 	selected   string
 	Hidden     bool
 	Icon       string
@@ -74,11 +74,9 @@ func (s *Selector) Now() string {
 }
 
 func (s *Selector) Set(name string) error {
-	p := new(C.Proxy)
 	for _, proxy := range s.GetProxies(false) {
 		if proxy.Name() == name {
-			*p = proxy
-			s.hint = p
+			s.hint = proxy
 			s.selected = name
 			return nil
 		}
@@ -97,23 +95,22 @@ func (s *Selector) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 }
 
 func (s *Selector) selectedProxy(touch bool) C.Proxy {
-	var pp *C.Proxy
-	pp = s.hint
-	if pp != nil{
-		return *pp}
+	if s.hint != nil{
+		return s.hint}
+	s.GetProxies(false)
 	s.locker.Lock()
 	defer s.locker.Unlock()
-	chDone := make(chan struct{})
-	go s.Hint(chDone)
-	runtime.SetFinalizer(s, func(x any){chDone <-struct{}{}})
-	pp = s.hint
-	if pp != nil{
-		return *pp}
+	go s.Hint()
+	runtime.Gosched()
+	if s.hint != nil{
+		return s.hint}
 	return s._selectedProxy()
 }
-func (s *Selector) Hint(chDone <-chan struct{}){
+func (s *Selector) Hint(){
+	chDone := make(chan struct{})
 	chHints := s.GetHints()
 	s._selectedProxy()
+	runtime.SetFinalizer(s, func(x any){chDone <-struct{}{}})
 	for{select {
 	case <-chHints:
 		s._selectedProxy()
@@ -123,19 +120,15 @@ func (s *Selector) Hint(chDone <-chan struct{}){
 }
 func (s *Selector) _selectedProxy() C.Proxy {
 	proxies := s.GetProxies(false)
-	p := new(C.Proxy)
 	for _, proxy := range proxies {
 		if proxy.Name() == s.selected {
-			*p = proxy
-			s.hint = p
+			s.hint = proxy
 			return proxy
 		}
 	}
-
-	*p = proxies[0]
-	s.selected = (*p).Name()
-	s.hint=p
-	return *p
+	s.hint = proxies[0]
+	s.selected = s.hint.Name()
+	return s.hint
 }
 
 func NewSelector(option *GroupCommonOption, providers []provider.ProxyProvider) *Selector {

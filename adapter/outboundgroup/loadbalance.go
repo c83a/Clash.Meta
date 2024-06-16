@@ -135,11 +135,14 @@ func (lb *LoadBalance) IsL3Protocol(metadata *C.Metadata) bool {
 	return lb.Unwrap(metadata, false).IsL3Protocol(metadata)
 }
 
-func (lb *LoadBalance) Hint(url string, chAlive chan<- []C.Proxy,
-					chDone chan struct{}) {
+func (lb *LoadBalance) Hint() {
 	var proxies_alive []C.Proxy
 	var pxs []C.Proxy
+	url := lb.testUrl
 	chHints := lb.chHints
+	chDone := make(chan struct{})
+	chAlive := make(chan []C.Proxy)
+	lb.chAlive = chAlive
 	pxs = lb.GetProxies(false)
 	for _, py := range(pxs){
 		if !py.AliveForTestUrl(url){
@@ -245,10 +248,7 @@ func (lb *LoadBalance) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	defer lb.locker.Unlock()
 	if lb.chAlive != nil{
 		return lb.strategyFn(proxies, metadata, touch)}
-	chAlive := make(chan []C.Proxy)
-	lb.chAlive = chAlive
-	chDone := make(chan struct{})
-	go lb.Hint(lb.testUrl, chAlive, chDone)
+	go lb.Hint()
 	return lb.strategyFn(proxies, metadata, touch)
 
 }
@@ -270,19 +270,6 @@ func (lb *LoadBalance) MarshalJSON() ([]byte, error) {
 }
 
 func NewLoadBalance(option *GroupCommonOption, providers []provider.ProxyProvider, strategy string) (lb *LoadBalance, err error) {
-/*
-	var strategyFn strategyFn
-	switch strategy {
-	case "consistent-hashing":
-		strategyFn = strategyConsistentHashing(option.URL)
-	case "round-robin":
-		strategyFn = strategyRoundRobin(option.URL, chAlive)
-	case "sticky-sessions":
-		strategyFn = strategyStickySessions(option.URL)
-	default:
-		return nil, fmt.Errorf("%w: %s", errStrategy, strategy)
-	}
-*/
 	l := &LoadBalance{
 		GroupBase: NewGroupBase(GroupBaseOption{
 			outbound.BaseOption{
