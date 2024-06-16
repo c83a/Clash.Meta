@@ -57,19 +57,19 @@ func (u *URLTest) Set(name string) error {
 	}
 	u.fastNode = *p
 	u.ForceSet(name)
-	return nil
-}
-
-func (u *URLTest) ForceSet(name string) {
-	u.selected = name
 	hints := u.GetHints()
 	if hints == nil{
-		return
+		return nil
 	}
 	select{
 	case hints <- struct{}{}:
 	default:
 	}
+	return nil
+}
+
+func (u *URLTest) ForceSet(name string) {
+	u.selected = name
 }
 
 // DialContext implements C.ProxyAdapter
@@ -145,7 +145,7 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 	if u.fastNode != nil{
 		return u.fastNode
 	}
-	return u._fast(u.GetProxies(false))
+	return u.Unwrap(nil, false)
 }
 func (u *URLTest) _fast(proxies []C.Proxy) C.Proxy {
 	touch := false
@@ -191,7 +191,6 @@ func (u *URLTest) _fast(proxies []C.Proxy) C.Proxy {
 	if shared && touch { // a shared fastSingle.Do() may cause providers untouched, so we touch them again
 		u.Touch()
 	}
-
 	return elm
 }
 

@@ -19,11 +19,12 @@ import (
 type Fallback struct {
 	*GroupBase
 	disableUDP     bool
+	Hidden         bool
 	hint           C.Proxy
+	chAlive        chan []C.Proxy
 	testUrl        string
 	selected       string
 	expectedStatus string
-	Hidden         bool
 	Icon           string
 }
 
@@ -112,8 +113,7 @@ func (f *Fallback) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	runtime.Gosched()
 	if f.hint != nil{
 		return f.hint}
-	proxy := f._findAliveProxy(proxies)
-	return proxy
+	return f._findAliveProxy(proxies)
 }
 
 func (f *Fallback) Hint(){
@@ -121,12 +121,31 @@ func (f *Fallback) Hint(){
 		return
 	}
 	chDone := make(chan struct{})
+	chAlive := make(chan []C.Proxy)
+	f.chAlive = chAlive
 	chHints := f.chHints
-	f._findAliveProxy(f.GetProxies(false))
+	url := f.testUrl
 	runtime.SetFinalizer(f,func(x any){chDone <- struct{}{}})
+	var all, alived []C.Proxy
+	g :=func(){
+		all = f.GetProxies(false)
+		for _, p := range all{
+			if !p.AliveForTestUrl(url){
+				continue
+			}
+			alived = append(alived, p)
+		}
+		}
+	g()
+	all = nil
+	go f._findAliveProxy(all)
 	for{select{
+	case chAlive <- alived:
 	case <- chHints:
-		f._findAliveProxy(f.GetProxies(false))
+		alived = nil
+		g()
+		go f._findAliveProxy(all)
+		all = nil
 	case <- chDone:
 		return
 	}}
@@ -137,26 +156,24 @@ func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 	return f.Unwrap(nil, false)
 }
 func (f *Fallback) _findAliveProxy(proxies []C.Proxy) C.Proxy {
-	for _, proxy := range proxies {
-		if len(f.selected) == 0 {
-			if proxy.AliveForTestUrl(f.testUrl) {
-				f.selected = proxy.Name()
-				f.hint = proxy
-				return proxy
-			}
-		} else {
-			if proxy.Name() == f.selected {
-				if proxy.AliveForTestUrl(f.testUrl) {
-				f.hint = proxy
-				return proxy
-				} else {
-					f.selected = ""
-				}
-			}
+	for{
+		if f.chAlive != nil{
+			break}
+		runtime.Gosched()
+	}
+	alived := <- f.chAlive
+	if len(alived) == 0{
+		f.hint = proxies[0]
+		return f.hint
+	}
+	for _, p  := range alived{
+		if p.Name() == f.selected{
+			f.hint = p
+			return p
 		}
 	}
-
-	f.hint = proxies[0]
+	f.hint = alived[0]
+	f.selected = f.hint.Name()
 	return f.hint
 }
 
@@ -173,7 +190,7 @@ func (f *Fallback) Set(name string) error {
 		return errors.New("proxy not exist")
 	}
 	f.hint = *p
-	f.selected = name
+	f.selected = (*p).Name()
 	if !(*p).AliveForTestUrl(f.testUrl) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(5000))
 		defer cancel()
@@ -181,6 +198,14 @@ func (f *Fallback) Set(name string) error {
 		_, _ = (*p).URLTest(ctx, f.testUrl, expectedStatus)
 	}
 
+	hints := f.GetHints()
+	if hints == nil{
+		return nil
+	}
+	select{
+	case hints <- struct{}{}:
+	default:
+	}
 	return nil
 }
 
