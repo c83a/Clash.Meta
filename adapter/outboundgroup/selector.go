@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"runtime"
 
 	"github.com/metacubex/mihomo/adapter/outbound"
 	"github.com/metacubex/mihomo/component/dialer"
@@ -14,7 +15,7 @@ import (
 type Selector struct {
 	*GroupBase
 	disableUDP bool
-	hint       int
+	hint       *C.Proxy
 	selected   string
 	Hidden     bool
 	Icon       string
@@ -73,9 +74,11 @@ func (s *Selector) Now() string {
 }
 
 func (s *Selector) Set(name string) error {
-	for i, proxy := range s.GetProxies(false) {
+	p := new(C.Proxy)
+	for _, proxy := range s.GetProxies(false) {
 		if proxy.Name() == name {
-			s.hint = i
+			*p = proxy
+			s.hint = p
 			s.selected = name
 			return nil
 		}
@@ -94,23 +97,49 @@ func (s *Selector) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 }
 
 func (s *Selector) selectedProxy(touch bool) C.Proxy {
-	proxies := s.GetProxies(touch)
-	if (s.hint < len(proxies)){
-		if p := proxies[s.hint];p.Name() == s.selected{
-			return p
-		}
-	}
-	for i, proxy := range proxies {
+	var pp *C.Proxy
+	pp = s.hint
+	if pp != nil{
+		return *pp}
+	s.locker.Lock()
+	defer s.locker.Unlock()
+	chDone := make(chan struct{})
+	go s.Hint(chDone)
+	runtime.SetFinalizer(s, func(x any){chDone <-struct{}{}})
+	pp = s.hint
+	if pp != nil{
+		return *pp}
+	return s._selectedProxy()
+}
+func (s *Selector) Hint(chDone <-chan struct{}){
+	chHints := s.GetHints()
+	s._selectedProxy()
+	for{select {
+	case <-chHints:
+		s._selectedProxy()
+	case <-chDone:
+		return
+	}}
+}
+func (s *Selector) _selectedProxy() C.Proxy {
+	proxies := s.GetProxies(false)
+	p := new(C.Proxy)
+	for _, proxy := range proxies {
 		if proxy.Name() == s.selected {
-			s.hint = i
+			*p = proxy
+			s.hint = p
 			return proxy
 		}
 	}
 
-	return proxies[0]
+	*p = proxies[0]
+	s.selected = (*p).Name()
+	s.hint=p
+	return *p
 }
 
 func NewSelector(option *GroupCommonOption, providers []provider.ProxyProvider) *Selector {
+
 	return &Selector{
 		GroupBase: NewGroupBase(GroupBaseOption{
 			outbound.BaseOption{
@@ -126,7 +155,6 @@ func NewSelector(option *GroupCommonOption, providers []provider.ProxyProvider) 
 			option.MaxFailedTimes,
 			providers,
 		}),
-		hint: 0,
 		selected:   "COMPATIBLE",
 		disableUDP: option.DisableUDP,
 		Hidden:     option.Hidden,

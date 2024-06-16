@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 	"runtime"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/metacubex/mihomo/component/dialer"
 	C "github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/constant/provider"
+	"github.com/metacubex/mihomo/common/atomic"
 
 	"golang.org/x/net/publicsuffix"
 )
@@ -28,6 +28,7 @@ type LoadBalance struct {
 	*GroupBase
 	disableUDP     bool
 	strategyFn     strategyFn
+	chAlive        chan []C.Proxy
 	testUrl        string
 	expectedStatus string
 	Hidden         bool
@@ -134,54 +135,49 @@ func (lb *LoadBalance) IsL3Protocol(metadata *C.Metadata) bool {
 	return lb.Unwrap(metadata, false).IsL3Protocol(metadata)
 }
 
-func strategyRoundRobin(url string) strategyFn {
-	pxch := make(chan C.Proxy)
-	stopCh := make(chan struct{},1)
-	idxMutex := sync.Mutex{}
-	proxies_alive := make([]C.Proxy,0,4)
-	f := func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
-		var p C.Proxy
-		select{
-		case p = <- pxch:
-			return p
-		default:
-			idxMutex.Lock()
-			defer idxMutex.Unlock()
-			select{
-			case p = <- pxch:
-				return p
-			default:
-			}
-			atleast := 32
-			proxies_alive = proxies_alive[:0]
-			f:=func(n int,pxs []C.Proxy){
-				for i:=0; i<n; i++{
-					for _, px := range(pxs){
-					select{
-						case pxch <- px:
-						case <- stopCh:
-							return
-					}}
-				}
-			}
-			for _, py := range(proxies){
-				if !py.AliveForTestUrl(url) {continue}
-				proxies_alive = append(proxies_alive, py)
-			}
-			if len(proxies_alive) == 0{
-				proxies_alive = append(proxies_alive, proxies...)
-			}
-			last_alive := len(proxies_alive)
-			n := (atleast / last_alive) + 1
-			go f(n, proxies_alive)
-			return proxies_alive[last_alive - 1]
-		}
+func (lb *LoadBalance) Hint(url string, chAlive chan<- []C.Proxy,
+					chDone chan struct{}) {
+	var proxies_alive []C.Proxy
+	var pxs []C.Proxy
+	chHints := lb.chHints
+	pxs = lb.GetProxies(false)
+	for _, py := range(pxs){
+		if !py.AliveForTestUrl(url){
+			continue}
+		proxies_alive = append(proxies_alive, py)}
+	if len(proxies_alive) == 0{
+		proxies_alive = pxs
 	}
-	runtime.SetFinalizer(&f, func(x any){stopCh <- struct{}{}})
-	return f
+	pxs = nil
+	runtime.SetFinalizer(lb, func(x any){chDone <- struct{}{}})
+	for{
+		select{
+			case <- chDone:
+				return
+			case <- chHints:
+				proxies_alive = make([]C.Proxy,0,4)
+				pxs = lb.GetProxies(false)
+				for _, py := range(pxs){
+				if !py.AliveForTestUrl(url) {continue}
+				proxies_alive = append(proxies_alive, py)}
+				if len(proxies_alive) == 0{
+					proxies_alive = pxs }
+				pxs = nil
+			case chAlive <- proxies_alive:
+		}
+
+
+	}
 }
 
-func strategyConsistentHashing(url string) strategyFn {
+func strategyRoundRobin(lb *LoadBalance, url string) strategyFn {
+	var i atomic.Int64 = atomic.NewInt64(-1)
+	return func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
+	pxs := <- lb.chAlive
+	return pxs[int(i.Add(1)) % len(pxs)]
+}}
+
+func strategyConsistentHashing(lb *LoadBalance, url string) strategyFn {
 	maxRetry := 5
 	return func(proxies []C.Proxy, metadata *C.Metadata, touch bool) C.Proxy {
 		key := utils.MapHash(getKey(metadata))
@@ -205,7 +201,7 @@ func strategyConsistentHashing(url string) strategyFn {
 	}
 }
 
-func strategyStickySessions(url string) strategyFn {
+func strategyStickySessions(lb *LoadBalance, url string) strategyFn {
 	ttl := time.Minute * 10
 	maxRetry := 5
 	lruCache := lru.New[uint64, int](
@@ -243,7 +239,18 @@ func strategyStickySessions(url string) strategyFn {
 // Unwrap implements C.ProxyAdapter
 func (lb *LoadBalance) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	proxies := lb.GetProxies(touch)
+	if lb.chAlive != nil{
+		return lb.strategyFn(proxies, metadata, touch)}
+	lb.locker.Lock()
+	defer lb.locker.Unlock()
+	if lb.chAlive != nil{
+		return lb.strategyFn(proxies, metadata, touch)}
+	chAlive := make(chan []C.Proxy)
+	lb.chAlive = chAlive
+	chDone := make(chan struct{})
+	go lb.Hint(lb.testUrl, chAlive, chDone)
 	return lb.strategyFn(proxies, metadata, touch)
+
 }
 
 // MarshalJSON implements C.ProxyAdapter
@@ -263,18 +270,20 @@ func (lb *LoadBalance) MarshalJSON() ([]byte, error) {
 }
 
 func NewLoadBalance(option *GroupCommonOption, providers []provider.ProxyProvider, strategy string) (lb *LoadBalance, err error) {
+/*
 	var strategyFn strategyFn
 	switch strategy {
 	case "consistent-hashing":
 		strategyFn = strategyConsistentHashing(option.URL)
 	case "round-robin":
-		strategyFn = strategyRoundRobin(option.URL)
+		strategyFn = strategyRoundRobin(option.URL, chAlive)
 	case "sticky-sessions":
 		strategyFn = strategyStickySessions(option.URL)
 	default:
 		return nil, fmt.Errorf("%w: %s", errStrategy, strategy)
 	}
-	return &LoadBalance{
+*/
+	l := &LoadBalance{
 		GroupBase: NewGroupBase(GroupBaseOption{
 			outbound.BaseOption{
 				Name:        option.Name,
@@ -289,11 +298,23 @@ func NewLoadBalance(option *GroupCommonOption, providers []provider.ProxyProvide
 			option.MaxFailedTimes,
 			providers,
 		}),
-		strategyFn:     strategyFn,
 		disableUDP:     option.DisableUDP,
 		testUrl:        option.URL,
 		expectedStatus: option.ExpectedStatus,
 		Hidden:         option.Hidden,
 		Icon:           option.Icon,
-	}, nil
+	}
+	var strategyFn strategyFn
+	switch strategy {
+	case "consistent-hashing":
+		strategyFn = strategyConsistentHashing(l, option.URL)
+	case "round-robin":
+		strategyFn = strategyRoundRobin(l, option.URL)
+	case "sticky-sessions":
+		strategyFn = strategyStickySessions(l, option.URL)
+	default:
+		return nil, fmt.Errorf("%w: %s", errStrategy, strategy)
+	}
+	l.strategyFn=strategyFn
+	return l, nil
 }

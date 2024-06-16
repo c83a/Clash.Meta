@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"runtime"
 
 	"github.com/metacubex/mihomo/adapter/outbound"
 	"github.com/metacubex/mihomo/common/callback"
@@ -32,7 +33,6 @@ type URLTest struct {
 	testUrl        string
 	expectedStatus string
 	tolerance      uint16
-	hint           int
 	disableUDP     bool
 	Hidden         bool
 	Icon           string
@@ -45,23 +45,31 @@ func (u *URLTest) Now() string {
 }
 
 func (u *URLTest) Set(name string) error {
-	var p C.Proxy
+	var p *C.Proxy
 	for _, proxy := range u.GetProxies(false) {
 		if proxy.Name() == name {
-			p = proxy
+			p = &proxy
 			break
 		}
 	}
 	if p == nil {
 		return errors.New("proxy not exist")
 	}
-	u.selected = name
-	u.fast(false)
+	u.fastNode = *p
+	u.ForceSet(name)
 	return nil
 }
 
 func (u *URLTest) ForceSet(name string) {
 	u.selected = name
+	hints := u.GetHints()
+	if hints == nil{
+		return
+	}
+	select{
+	case hints <- struct{}{}:
+	default:
+	}
 }
 
 // DialContext implements C.ProxyAdapter
@@ -99,24 +107,54 @@ func (u *URLTest) ListenPacketContext(ctx context.Context, metadata *C.Metadata,
 
 // Unwrap implements C.ProxyAdapter
 func (u *URLTest) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
-	return u.fast(touch)
+	if u.fastNode != nil{
+		return u.fastNode
+	}
+	u.locker.Lock()
+	defer u.locker.Unlock()
+	if u.fastNode != nil{
+		return u.fastNode
+	}
+	go u.Hint()
+	runtime.Gosched()
+	if u.fastNode != nil{
+		return u.fastNode
+	}
+	return u._fast()
+}
+
+func (u *URLTest) Hint() {
+	if u.fastNode != nil{
+		return
+	}
+	chDone := make(chan struct{})
+	chHints := make(chan struct{},1)
+	u.chHints = chHints
+	u._fast()
+	runtime.SetFinalizer(u,func(x any){chDone <- struct{}{}})
+	for{select{
+	case <- chHints:
+		u._fast()
+	case <- chDone:
+		return
+	}}
 }
 
 func (u *URLTest) fast(touch bool) C.Proxy {
-	proxies := u.GetProxies(touch)
-	if u.hint <len(proxies){
-		if p:=proxies[u.hint];p.Name() == u.selected&& 
-				p.AliveForTestUrl(u.testUrl){
-			return p
-		}
+	if u.fastNode != nil{
+		return u.fastNode
 	}
+	return u._fast()
+}
+func (u *URLTest) _fast() C.Proxy {
+	touch := false
+	proxies := u.GetProxies(false)
 	if u.selected != "" {
-		for i, proxy := range proxies {
+		for _, proxy := range proxies {
 			if !proxy.AliveForTestUrl(u.testUrl) {
 				continue
 			}
 			if proxy.Name() == u.selected {
-				u.hint = i
 				u.fastNode = proxy
 				return proxy
 			}
@@ -125,11 +163,10 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 
 	elm, _, shared := u.fastSingle.Do(func() (C.Proxy, error) {
 		fast := proxies[0]
-		hint := 0
 		minDelay := fast.LastDelayForTestUrl(u.testUrl)
 		fastNotExist := true
 
-		for i, proxy := range proxies{
+		for _, proxy := range proxies[1:] {
 			if u.fastNode != nil && proxy.Name() == u.fastNode.Name() {
 				fastNotExist = false
 			}
@@ -141,7 +178,6 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 			delay := proxy.LastDelayForTestUrl(u.testUrl)
 			if delay < minDelay {
 				fast = proxy
-				hint = i
 				minDelay = delay
 			}
 
@@ -149,8 +185,6 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 		// tolerance
 		if u.fastNode == nil || fastNotExist || !u.fastNode.AliveForTestUrl(u.testUrl) || u.fastNode.LastDelayForTestUrl(u.testUrl) > fast.LastDelayForTestUrl(u.testUrl)+u.tolerance {
 			u.fastNode = fast
-			u.selected = fast.Name()
-			u.hint = hint
 		}
 		return u.fastNode, nil
 	})

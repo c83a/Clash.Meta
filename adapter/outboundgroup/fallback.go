@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+	"runtime"
 
 	"github.com/metacubex/mihomo/adapter/outbound"
 	"github.com/metacubex/mihomo/common/callback"
@@ -18,7 +19,7 @@ import (
 type Fallback struct {
 	*GroupBase
 	disableUDP     bool
-	hint           int
+	hint           C.Proxy
 	testUrl        string
 	selected       string
 	expectedStatus string
@@ -100,29 +101,55 @@ func (f *Fallback) MarshalJSON() ([]byte, error) {
 
 // Unwrap implements C.ProxyAdapter
 func (f *Fallback) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
+	if f.hint != nil{
+		return f.hint}
+	f.locker.Lock()
+	defer f.locker.Unlock()
+	if f.hint != nil{
+		return f.hint}
+	go f.Hint()
 	proxy := f.findAliveProxy(touch)
 	return proxy
 }
 
-func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
-	proxies := f.GetProxies(touch)
-	if f.hint < len(proxies){
-		if p:=proxies[f.hint];p.Name() == f.selected &&
-					p.AliveForTestUrl(f.testUrl){
-			return p
-		}
+func (f *Fallback) Hint(){
+	if f.hint != nil{
+		return
 	}
-	for i, proxy := range proxies {
+	chDone := make(chan struct{})
+	chHints := f.chHints
+	f._findAliveProxy()
+	runtime.SetFinalizer(f,func(x any){chDone <- struct{}{}})
+	for{select{
+	case <- chHints:
+		f._findAliveProxy()
+	case <- chDone:
+		return
+	}}
+}
+func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
+	if f.hint != nil{
+		return f.hint
+	}else{
+		runtime.Gosched()
+		if f.hint != nil{ return f.hint}
+		return f._findAliveProxy()
+	}
+}
+func (f *Fallback) _findAliveProxy() C.Proxy {
+	proxies := f.GetProxies(false)
+	for _, proxy := range proxies {
 		if len(f.selected) == 0 {
 			if proxy.AliveForTestUrl(f.testUrl) {
-				f.hint = i
+				f.selected = proxy.Name()
+				f.hint = proxy
 				return proxy
 			}
 		} else {
 			if proxy.Name() == f.selected {
 				if proxy.AliveForTestUrl(f.testUrl) {
-					f.hint = i
-					return proxy
+				f.hint = proxy
+				return proxy
 				} else {
 					f.selected = ""
 				}
@@ -130,17 +157,15 @@ func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 		}
 	}
 
-	f.hint = 0
-	return proxies[0]
+	f.hint = proxies[0]
+	return f.hint
 }
 
 func (f *Fallback) Set(name string) error {
-	var p C.Proxy
-	var hint int
-	for i, proxy := range f.GetProxies(false) {
+	var p *C.Proxy
+	for _, proxy := range f.GetProxies(false) {
 		if proxy.Name() == name {
-			hint = i
-			p = proxy
+			p = &proxy
 			break
 		}
 	}
@@ -148,13 +173,13 @@ func (f *Fallback) Set(name string) error {
 	if p == nil {
 		return errors.New("proxy not exist")
 	}
-	f.hint = hint
+	f.hint = *p
 	f.selected = name
-	if !p.AliveForTestUrl(f.testUrl) {
+	if !(*p).AliveForTestUrl(f.testUrl) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(5000))
 		defer cancel()
 		expectedStatus, _ := utils.NewUnsignedRanges[uint16](f.expectedStatus)
-		_, _ = p.URLTest(ctx, f.testUrl, expectedStatus)
+		_, _ = (*p).URLTest(ctx, f.testUrl, expectedStatus)
 	}
 
 	return nil
@@ -180,7 +205,6 @@ func NewFallback(option *GroupCommonOption, providers []provider.ProxyProvider) 
 			option.MaxFailedTimes,
 			providers,
 		}),
-		hint: 0,
 		disableUDP:     option.DisableUDP,
 		testUrl:        option.URL,
 		expectedStatus: option.ExpectedStatus,

@@ -32,6 +32,7 @@ type GroupBase struct {
 	failedTesting    atomic.Bool
 	proxies          [][]C.Proxy
 	ChProxies        chan []C.Proxy
+	chHints          chan struct{}
 	locker           sync.Mutex
 	versions         []atomic.Uint32
 	TestTimeout      int
@@ -109,22 +110,30 @@ func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
 	}
 	gb.locker.Lock()
 	defer gb.locker.Unlock()
+
 	if gb.ChProxies != nil {
 		return  <- gb.ChProxies
 	}
 	chProxies := make(chan []C.Proxy)
 	chDirtyCache := make(chan struct{},1)
+	chHints := make(chan struct{},1)
 	chDone := make(chan struct{})
 	for _, pd := range gb.providers {
 		pd.AddFollower(chDirtyCache)
 	}
 	gb.ChProxies = chProxies
+	gb.chHints = chHints
 	runtime.SetFinalizer(gb,func(x any){chDone <- struct{}{}})
 	cached_proxies := gb._GetProxies(make([]C.Proxy,0,2))
-	go func(){for {
+	go func(){var hint struct{}
+		for {
 		select{
-		case <- chDirtyCache:
+		case hint = <- chDirtyCache:
 			cached_proxies = gb._GetProxies(cached_proxies[:0])
+			select {
+			case chHints <- hint:
+			default:
+			}
 		case chProxies <- cached_proxies:
 			//pass
 		case <- chDone:
@@ -134,6 +143,9 @@ func (gb *GroupBase) GetProxiesCH()( []C.Proxy ){
 	return  cached_proxies
 }
 
+func (gb *GroupBase) GetHints() chan struct{}{
+	return gb.chHints
+}
 func (gb *GroupBase) _GetProxies(proxies []C.Proxy) []C.Proxy {
 //	var proxies []C.Proxy
 	if len(gb.filterRegs) == 0 {
@@ -268,6 +280,8 @@ func (gb *GroupBase) URLTest(ctx context.Context, url string, expectedStatus uti
 		}()
 	}
 	wg.Wait()
+	select {case gb.chHints <- struct{}{}:
+	default:}
 
 	if len(mp)==0{
 		return mp, fmt.Errorf("get delay: all proxies timeout")
@@ -327,6 +341,8 @@ func (gb *GroupBase) healthCheck() {
 	wg.Wait()
 	gb.failedTesting.Store(false)
 	gb.failedTimes = 0
+	select {case gb.chHints <- struct{}{}:
+	default:}
 }
 
 func (gb *GroupBase) onDialSuccess() {
