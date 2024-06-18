@@ -54,6 +54,7 @@ func (pt ProviderType) String() string {
 		return "Unknown"
 	}
 }
+
 // Provider interface
 type Provider interface {
 	Name() string
@@ -84,7 +85,7 @@ type RuleProvider interface {
 	Match(*constant.Metadata) bool
 	ShouldResolveIP() bool
 	ShouldFindProcess() bool
-	AsRule(adaptor string) constant.Rule
+	Strategy() any
 }
 
 // Rule Behavior
@@ -126,4 +127,10 @@ func (rf RuleFormat) String() string {
 	default:
 		return "Unknown"
 	}
+}
+
+type Tunnel interface {
+	Providers() map[string]ProxyProvider
+	RuleProviders() map[string]RuleProvider
+	RuleUpdateCallback() *utils.Callback[RuleProvider]
 }
