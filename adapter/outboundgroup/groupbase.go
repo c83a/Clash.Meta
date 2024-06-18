@@ -148,6 +148,8 @@ func (gb *GroupBase) GetHints() chan struct{}{
 }
 func (gb *GroupBase) _GetProxies(proxies []C.Proxy) []C.Proxy {
 //	var proxies []C.Proxy
+	for count:=0;count < 2; count +=1 {
+	runtime.Gosched()
 	if len(gb.filterRegs) == 0 {
 		for _, pd := range gb.providers {
 /*			if touch {
@@ -252,7 +254,10 @@ func (gb *GroupBase) _GetProxies(proxies []C.Proxy) []C.Proxy {
 		}
 		proxies = newProxies
 	}
-
+	if len(proxies) != 0 {
+		break
+	}
+}
 	if len(proxies) == 0 {
 		return append(proxies, tunnel.Proxies()["COMPATIBLE"])
 	}

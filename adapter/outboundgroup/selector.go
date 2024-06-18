@@ -102,7 +102,6 @@ func (s *Selector) Unwrap(metadata *C.Metadata, touch bool) C.Proxy {
 	runtime.Gosched()
 	if s.hint != nil{
 		return s.hint}
-	proxies = s.GetProxies(false)
 	return s._selectedProxy(proxies)
 }
 
