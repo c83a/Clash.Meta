@@ -270,6 +270,9 @@ func preHandleMetadata(metadata *C.Metadata) error {
 		metadata.Host = ""
 	}
 
+	if !resolver.FakeIPEnabled() && metadata.SpecialProxy != "" {
+		return nil
+	}
 	// preprocess enhanced-mode metadata
 	if needLookupIP(metadata) {
 		host, exist := resolver.FindHostByIP(metadata.DstIP)
