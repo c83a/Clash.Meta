@@ -243,7 +243,9 @@ func matchSubRules(metadata *C.Metadata, name string, subRules map[string][]C.Ru
 	for _, rule := range subRules[name] {
 		if m, a := rule.Match(metadata); m {
 			if rule.RuleType() == C.SubRules {
-				return matchSubRules(metadata, rule.Adapter(), subRules)
+				if m2, a2 := matchSubRules(metadata, rule.Adapter(), subRules);m2{
+					return true, a2
+				}
 			} else {
 				return m, a
 			}
