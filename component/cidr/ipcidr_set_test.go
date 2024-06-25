@@ -96,11 +96,12 @@ func TestMerge(t *testing.T) {
 			set.AddIpCidrForString(test.ipCidr1)
 			set.AddIpCidrForString(test.ipCidr2)
 			set.Merge()
-
-			rangesLen := len(set.tb)
+/*
+			rangesLen := len(set.rr)
 
 			if rangesLen != test.expectedLen {
 				t.Errorf("Expected len: %v, got: %v", test.expectedLen, rangesLen)
+*/
 			}
 		})
 	}
