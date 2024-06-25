@@ -101,8 +101,8 @@ func TestMerge(t *testing.T) {
 
 			if rangesLen != test.expectedLen {
 				t.Errorf("Expected len: %v, got: %v", test.expectedLen, rangesLen)
-*/
 			}
+*/
 		})
 	}
 }
