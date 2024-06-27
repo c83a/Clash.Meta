@@ -3,11 +3,11 @@
 package ipset
 
 import (
-	"net"
+	"net/netip"
 )
 
 // Always return false in non-linux
-func Test(setName string, ip net.IP) (bool, error) {
+func Test(setName string, ip netip.Addr) (bool, error) {
 	return false, nil
 }
 
