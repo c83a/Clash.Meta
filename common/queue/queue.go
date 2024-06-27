@@ -61,7 +61,7 @@ func (q *Queue[T]) Copy() []T {
 	q.lock.RUnlock()
 	return items
 */
-	items := make([]T{},0,1)
+	items := make([]T,0,1)
 	items[0] = q.items[0]
 	return items
 }
