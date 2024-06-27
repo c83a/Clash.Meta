@@ -30,6 +30,7 @@ const (
 	Network
 	Uid
 	SubRules
+	IPSet
 	MATCH
 	AND
 	OR
@@ -86,6 +87,8 @@ func (rt RuleType) String() string {
 		return "ProcessNameRegex"
 	case ProcessPathRegex:
 		return "ProcessPathRegex"
+	case IPSet:
+		return "IPSet"
 	case MATCH:
 		return "Match"
 	case RuleSet:
