@@ -3,20 +3,20 @@
 package ipset
 
 import (
+	"net/netip"
 	"net"
-
-	"github.com/vishvananda/netlink"
+	N "github.com/vishvananda/netlink"
 )
 
 // Test whether the ip is in the set or not
-func Test(setName string, ip net.IP) (bool, error) {
-	return netlink.IpsetTest(setName, &netlink.IPSetEntry{
-		IP: ip,
+func Test(setName string, ip netip.Addr) (bool, error) {
+	return N.IpsetTest(setName, &N.IPSetEntry{
+		IP: net.IP(ip.AsSlice()),
 	})
 }
 
 // Verify dumps a specific ipset to check if we can use the set normally
 func Verify(setName string) error {
-	_, err := netlink.IpsetList(setName)
+	_, err := N.IpsetList(setName)
 	return err
 }

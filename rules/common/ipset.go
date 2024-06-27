@@ -1,13 +1,13 @@
-package rules
+package common
 
 import (
-//	"github.com/metacubex/mihomo/component/ipset"
 	"github.com/c83a/Clash.Meta/component/ipset"
 	C "github.com/c83a/Clash.Meta/constant"
 	"github.com/c83a/Clash.Meta/log"
 )
 
 type IPSet struct {
+	*Base
 	name        string
 	adapter     string
 	noResolveIP bool
@@ -17,13 +17,13 @@ func (f *IPSet) RuleType() C.RuleType {
 	return C.IPSet
 }
 
-func (f *IPSet) Match(metadata *C.Metadata) bool {
+func (f *IPSet) Match(metadata *C.Metadata) (bool, string){
 	exist, err := ipset.Test(f.name, metadata.DstIP)
 	if err != nil {
 		log.Warnln("check ipset '%s' failed: %s", f.name, err.Error())
-		return false
+		return false,f.adapter
 	}
-	return exist
+	return exist,f.adapter
 }
 
 func (f *IPSet) Adapter() string {
@@ -48,6 +48,7 @@ func NewIPSet(name string, adapter string, noResolveIP bool) (*IPSet, error) {
 	}
 
 	return &IPSet{
+		Base:    &Base{},
 		name:        name,
 		adapter:     adapter,
 		noResolveIP: noResolveIP,
