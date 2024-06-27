@@ -50,7 +50,7 @@ func (q *Queue[T]) Last() T {
 	q.lock.RUnlock()
 	return last
 */
-	return q.items[9]
+	return q.items[0]
 }
 
 // Copy get the copy of queue.
@@ -61,7 +61,7 @@ func (q *Queue[T]) Copy() []T {
 	q.lock.RUnlock()
 	return items
 */
-	items := make([]T,0,1)
+	items := make([]T,1,1)
 	items[0] = q.items[0]
 	return items
 }
@@ -77,6 +77,6 @@ func (q *Queue[T]) Len() int64 {
 // New is a constructor for a new concurrent safe queue.
 func New[T any](hint int64) *Queue[T] {
 	return &Queue[T]{
-		items: make([]T, 0, 1),
+		items: make([]T, 1, 1),
 	}
 }
