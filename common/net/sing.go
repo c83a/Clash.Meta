@@ -5,7 +5,7 @@ import (
 	"net"
 	"runtime"
 
-	"github.com/metacubex/mihomo/common/net/deadline"
+	"github.com/c83a/Clash.Meta/common/net/deadline"
 
 	"github.com/sagernet/sing/common"
 	"github.com/sagernet/sing/common/bufio"

@@ -5,7 +5,7 @@ import (
 	"time"
 	"runtime"
 
-	"github.com/metacubex/mihomo/common/atomic"
+	"github.com/c83a/Clash.Meta/common/atomic"
 
 	"github.com/puzpuzpuz/xsync/v3"
 //	"github.com/shirou/gopsutil/v3/process"

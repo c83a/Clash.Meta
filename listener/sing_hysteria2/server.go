@@ -11,14 +11,14 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/metacubex/mihomo/adapter/inbound"
-	"github.com/metacubex/mihomo/adapter/outbound"
-	CN "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/common/sockopt"
-	C "github.com/metacubex/mihomo/constant"
-	LC "github.com/metacubex/mihomo/listener/config"
-	"github.com/metacubex/mihomo/listener/sing"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
+	"github.com/c83a/Clash.Meta/adapter/outbound"
+	CN "github.com/c83a/Clash.Meta/common/net"
+	"github.com/c83a/Clash.Meta/common/sockopt"
+	C "github.com/c83a/Clash.Meta/constant"
+	LC "github.com/c83a/Clash.Meta/listener/config"
+	"github.com/c83a/Clash.Meta/listener/sing"
+	"github.com/c83a/Clash.Meta/log"
 
 	"github.com/metacubex/sing-quic/hysteria2"
 

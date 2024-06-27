@@ -1,4 +1,4 @@
-module github.com/metacubex/mihomo
+module github.com/c83a/Clash.Meta
 
 go 1.20
 

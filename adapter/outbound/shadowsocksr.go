@@ -7,16 +7,16 @@ import (
 	"net"
 	"strconv"
 
-	N "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/component/dialer"
-	"github.com/metacubex/mihomo/component/proxydialer"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/transport/shadowsocks/core"
-	"github.com/metacubex/mihomo/transport/shadowsocks/shadowaead"
-	"github.com/metacubex/mihomo/transport/shadowsocks/shadowstream"
-	"github.com/metacubex/mihomo/transport/socks5"
-	"github.com/metacubex/mihomo/transport/ssr/obfs"
-	"github.com/metacubex/mihomo/transport/ssr/protocol"
+	N "github.com/c83a/Clash.Meta/common/net"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	"github.com/c83a/Clash.Meta/component/proxydialer"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/transport/shadowsocks/core"
+	"github.com/c83a/Clash.Meta/transport/shadowsocks/shadowaead"
+	"github.com/c83a/Clash.Meta/transport/shadowsocks/shadowstream"
+	"github.com/c83a/Clash.Meta/transport/socks5"
+	"github.com/c83a/Clash.Meta/transport/ssr/obfs"
+	"github.com/c83a/Clash.Meta/transport/ssr/protocol"
 )
 
 type ShadowSocksR struct {
@@ -125,7 +125,7 @@ func (ssr *ShadowSocksR) SupportWithDialer() C.NetWork {
 
 func NewShadowSocksR(option ShadowSocksROption) (*ShadowSocksR, error) {
 	// SSR protocol compatibility
-	// https://github.com/metacubex/mihomo/pull/2056
+	// https://github.com/c83a/Clash.Meta/pull/2056
 	if option.Cipher == "none" {
 		option.Cipher = "dummy"
 	}

@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	mihomoHttp "github.com/metacubex/mihomo/component/http"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	mihomoHttp "github.com/c83a/Clash.Meta/component/http"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 
 	"github.com/klauspost/cpuid/v2"
 )

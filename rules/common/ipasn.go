@@ -3,10 +3,10 @@ package common
 import (
 	"strconv"
 
-	"github.com/metacubex/mihomo/component/geodata"
-	"github.com/metacubex/mihomo/component/mmdb"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/component/geodata"
+	"github.com/c83a/Clash.Meta/component/mmdb"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 type ASN struct {

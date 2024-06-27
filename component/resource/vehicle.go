@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	mihomoHttp "github.com/metacubex/mihomo/component/http"
-	types "github.com/metacubex/mihomo/constant/provider"
+	mihomoHttp "github.com/c83a/Clash.Meta/component/http"
+	types "github.com/c83a/Clash.Meta/constant/provider"
 )
 
 type FileVehicle struct {

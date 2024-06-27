@@ -1,10 +1,10 @@
 package inbound
 
 import (
-	C "github.com/metacubex/mihomo/constant"
-	LC "github.com/metacubex/mihomo/listener/config"
-	"github.com/metacubex/mihomo/listener/sing_hysteria2"
-	"github.com/metacubex/mihomo/log"
+	C "github.com/c83a/Clash.Meta/constant"
+	LC "github.com/c83a/Clash.Meta/listener/config"
+	"github.com/c83a/Clash.Meta/listener/sing_hysteria2"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 type Hysteria2Option struct {

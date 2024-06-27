@@ -10,14 +10,14 @@ import (
 	"strconv"
 	"time"
 
-	CN "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/common/utils"
-	"github.com/metacubex/mihomo/component/ca"
-	"github.com/metacubex/mihomo/component/dialer"
-	"github.com/metacubex/mihomo/component/proxydialer"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
-	tuicCommon "github.com/metacubex/mihomo/transport/tuic/common"
+	CN "github.com/c83a/Clash.Meta/common/net"
+	"github.com/c83a/Clash.Meta/common/utils"
+	"github.com/c83a/Clash.Meta/component/ca"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	"github.com/c83a/Clash.Meta/component/proxydialer"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
+	tuicCommon "github.com/c83a/Clash.Meta/transport/tuic/common"
 
 	"github.com/metacubex/sing-quic/hysteria2"
 

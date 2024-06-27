@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/metacubex/mihomo/common/nnip"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/transport/socks5"
+	"github.com/c83a/Clash.Meta/common/nnip"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/transport/socks5"
 )
 var mPool sync.Pool
 var m0 *C.Metadata

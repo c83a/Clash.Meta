@@ -5,12 +5,12 @@ import (
 	"errors"
 	"runtime"
 
-	CN "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/component/dialer"
-	"github.com/metacubex/mihomo/component/proxydialer"
-	"github.com/metacubex/mihomo/component/resolver"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	CN "github.com/c83a/Clash.Meta/common/net"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	"github.com/c83a/Clash.Meta/component/proxydialer"
+	"github.com/c83a/Clash.Meta/component/resolver"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 
 	mux "github.com/sagernet/sing-mux"
 	E "github.com/sagernet/sing/common/exceptions"

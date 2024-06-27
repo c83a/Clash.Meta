@@ -8,9 +8,9 @@ import (
 	"strings"
 	_ "unsafe"
 
-	"github.com/metacubex/mihomo/common/utils"
-	"github.com/metacubex/mihomo/component/resolver/hosts"
-	"github.com/metacubex/mihomo/component/trie"
+	"github.com/c83a/Clash.Meta/common/utils"
+	"github.com/c83a/Clash.Meta/component/resolver/hosts"
+	"github.com/c83a/Clash.Meta/component/trie"
 	"github.com/metacubex/randv2"
 )
 

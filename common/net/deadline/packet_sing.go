@@ -4,7 +4,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/metacubex/mihomo/common/net/packet"
+	"github.com/c83a/Clash.Meta/common/net/packet"
 
 	"github.com/sagernet/sing/common/buf"
 	"github.com/sagernet/sing/common/bufio"

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/metacubex/mihomo/component/auth"
+	"github.com/c83a/Clash.Meta/component/auth"
 )
 
 var authenticator auth.Authenticator

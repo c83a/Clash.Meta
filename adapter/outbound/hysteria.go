@@ -14,17 +14,17 @@ import (
 	"github.com/metacubex/quic-go/congestion"
 	M "github.com/sagernet/sing/common/metadata"
 
-	"github.com/metacubex/mihomo/component/ca"
-	"github.com/metacubex/mihomo/component/dialer"
-	"github.com/metacubex/mihomo/component/proxydialer"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
-	hyCongestion "github.com/metacubex/mihomo/transport/hysteria/congestion"
-	"github.com/metacubex/mihomo/transport/hysteria/core"
-	"github.com/metacubex/mihomo/transport/hysteria/obfs"
-	"github.com/metacubex/mihomo/transport/hysteria/pmtud_fix"
-	"github.com/metacubex/mihomo/transport/hysteria/transport"
-	"github.com/metacubex/mihomo/transport/hysteria/utils"
+	"github.com/c83a/Clash.Meta/component/ca"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	"github.com/c83a/Clash.Meta/component/proxydialer"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
+	hyCongestion "github.com/c83a/Clash.Meta/transport/hysteria/congestion"
+	"github.com/c83a/Clash.Meta/transport/hysteria/core"
+	"github.com/c83a/Clash.Meta/transport/hysteria/obfs"
+	"github.com/c83a/Clash.Meta/transport/hysteria/pmtud_fix"
+	"github.com/c83a/Clash.Meta/transport/hysteria/transport"
+	"github.com/c83a/Clash.Meta/transport/hysteria/utils"
 )
 
 const (

@@ -9,12 +9,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/metacubex/mihomo/adapter/inbound"
-	"github.com/metacubex/mihomo/common/lru"
-	N "github.com/metacubex/mihomo/common/net"
-	C "github.com/metacubex/mihomo/constant"
-	authStore "github.com/metacubex/mihomo/listener/auth"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
+	"github.com/c83a/Clash.Meta/common/lru"
+	N "github.com/c83a/Clash.Meta/common/net"
+	C "github.com/c83a/Clash.Meta/constant"
+	authStore "github.com/c83a/Clash.Meta/listener/auth"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 type bodyWrapper struct {

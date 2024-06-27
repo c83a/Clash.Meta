@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/log"
 
 	utls "github.com/metacubex/utls"
 	"github.com/mroth/weightedrand/v2"

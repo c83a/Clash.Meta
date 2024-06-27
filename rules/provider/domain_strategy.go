@@ -1,9 +1,9 @@
 package provider
 
 import (
-	"github.com/metacubex/mihomo/component/trie"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/component/trie"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 type domainStrategy struct {

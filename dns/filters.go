@@ -4,12 +4,12 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/metacubex/mihomo/component/geodata"
-	"github.com/metacubex/mihomo/component/geodata/router"
-	"github.com/metacubex/mihomo/component/mmdb"
-	"github.com/metacubex/mihomo/component/trie"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/component/geodata"
+	"github.com/c83a/Clash.Meta/component/geodata/router"
+	"github.com/c83a/Clash.Meta/component/mmdb"
+	"github.com/c83a/Clash.Meta/component/trie"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 type fallbackIPFilter interface {

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/netip"
 
-	"github.com/metacubex/mihomo/common/cmd"
-	"github.com/metacubex/mihomo/component/dialer"
-	"github.com/metacubex/mihomo/component/ebpf/redir"
-	"github.com/metacubex/mihomo/component/ebpf/tc"
-	C "github.com/metacubex/mihomo/constant"
+	"github.com/c83a/Clash.Meta/common/cmd"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	"github.com/c83a/Clash.Meta/component/ebpf/redir"
+	"github.com/c83a/Clash.Meta/component/ebpf/tc"
+	C "github.com/c83a/Clash.Meta/constant"
 	"github.com/sagernet/netlink"
 )
 

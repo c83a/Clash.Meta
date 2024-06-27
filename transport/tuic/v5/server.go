@@ -7,12 +7,12 @@ import (
 	"net"
 	"sync"
 
-	"github.com/metacubex/mihomo/adapter/inbound"
-	"github.com/metacubex/mihomo/common/atomic"
-	N "github.com/metacubex/mihomo/common/net"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/transport/socks5"
-	"github.com/metacubex/mihomo/transport/tuic/common"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
+	"github.com/c83a/Clash.Meta/common/atomic"
+	N "github.com/c83a/Clash.Meta/common/net"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/transport/socks5"
+	"github.com/c83a/Clash.Meta/transport/tuic/common"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/metacubex/quic-go"

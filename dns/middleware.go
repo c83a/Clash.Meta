@@ -5,13 +5,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/metacubex/mihomo/common/lru"
-	"github.com/metacubex/mihomo/common/nnip"
-	"github.com/metacubex/mihomo/component/fakeip"
-	R "github.com/metacubex/mihomo/component/resolver"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/context"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/common/lru"
+	"github.com/c83a/Clash.Meta/common/nnip"
+	"github.com/c83a/Clash.Meta/component/fakeip"
+	R "github.com/c83a/Clash.Meta/component/resolver"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/context"
+	"github.com/c83a/Clash.Meta/log"
 
 	D "github.com/miekg/dns"
 )

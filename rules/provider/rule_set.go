@@ -1,9 +1,9 @@
 package provider
 
 import (
-	C "github.com/metacubex/mihomo/constant"
-	P "github.com/metacubex/mihomo/constant/provider"
-	"github.com/metacubex/mihomo/rules/common"
+	C "github.com/c83a/Clash.Meta/constant"
+	P "github.com/c83a/Clash.Meta/constant/provider"
+	"github.com/c83a/Clash.Meta/rules/common"
 )
 
 type RuleSet struct {

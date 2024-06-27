@@ -4,12 +4,12 @@ import (
 	"net"
 	"strings"
 
-	"github.com/metacubex/mihomo/adapter/inbound"
-	N "github.com/metacubex/mihomo/common/net"
-	C "github.com/metacubex/mihomo/constant"
-	LC "github.com/metacubex/mihomo/listener/config"
-	"github.com/metacubex/mihomo/transport/shadowsocks/core"
-	"github.com/metacubex/mihomo/transport/socks5"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
+	N "github.com/c83a/Clash.Meta/common/net"
+	C "github.com/c83a/Clash.Meta/constant"
+	LC "github.com/c83a/Clash.Meta/listener/config"
+	"github.com/c83a/Clash.Meta/transport/shadowsocks/core"
+	"github.com/c83a/Clash.Meta/transport/socks5"
 )
 
 type Listener struct {

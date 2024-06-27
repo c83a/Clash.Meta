@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
-	"github.com/metacubex/mihomo/component/geodata/router"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/component/geodata/router"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 var (

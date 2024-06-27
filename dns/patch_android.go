@@ -7,9 +7,9 @@ import (
 
 	D "github.com/miekg/dns"
 
-	"github.com/metacubex/mihomo/common/lru"
-	"github.com/metacubex/mihomo/component/dhcp"
-	"github.com/metacubex/mihomo/component/resolver"
+	"github.com/c83a/Clash.Meta/common/lru"
+	"github.com/c83a/Clash.Meta/component/dhcp"
+	"github.com/c83a/Clash.Meta/component/resolver"
 )
 
 const SystemDNSPlaceholder = "system"

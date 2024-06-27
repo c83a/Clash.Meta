@@ -38,8 +38,8 @@
             ldflags = [
               "-s"
               "-w"
-              "-X github.com/metacubex/mihomo/constant.Version=dev-${version}"
-              "-X github.com/metacubex/mihomo/constant.BuildTime=${version}"
+              "-X github.com/c83a/Clash.Meta/constant.Version=dev-${version}"
+              "-X github.com/c83a/Clash.Meta/constant.BuildTime=${version}"
             ];
             
             tags = [

@@ -14,12 +14,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/metacubex/mihomo/adapter/inbound"
-	CN "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/common/utils"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
-	"github.com/metacubex/mihomo/tunnel/statistic"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
+	CN "github.com/c83a/Clash.Meta/common/net"
+	"github.com/c83a/Clash.Meta/common/utils"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
+	"github.com/c83a/Clash.Meta/tunnel/statistic"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

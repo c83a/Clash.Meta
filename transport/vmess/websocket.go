@@ -19,10 +19,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/metacubex/mihomo/common/buf"
-	N "github.com/metacubex/mihomo/common/net"
-	tlsC "github.com/metacubex/mihomo/component/tls"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/common/buf"
+	N "github.com/c83a/Clash.Meta/common/net"
+	tlsC "github.com/c83a/Clash.Meta/component/tls"
+	"github.com/c83a/Clash.Meta/log"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"

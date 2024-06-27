@@ -8,12 +8,12 @@ import (
 
 	"github.com/dlclark/regexp2"
 
-	"github.com/metacubex/mihomo/adapter/outbound"
-	"github.com/metacubex/mihomo/adapter/provider"
-	"github.com/metacubex/mihomo/common/structure"
-	"github.com/metacubex/mihomo/common/utils"
-	C "github.com/metacubex/mihomo/constant"
-	types "github.com/metacubex/mihomo/constant/provider"
+	"github.com/c83a/Clash.Meta/adapter/outbound"
+	"github.com/c83a/Clash.Meta/adapter/provider"
+	"github.com/c83a/Clash.Meta/common/structure"
+	"github.com/c83a/Clash.Meta/common/utils"
+	C "github.com/c83a/Clash.Meta/constant"
+	types "github.com/c83a/Clash.Meta/constant/provider"
 )
 
 var (

@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	mihomoOnce "github.com/metacubex/mihomo/common/once"
-	mihomoHttp "github.com/metacubex/mihomo/component/http"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	mihomoOnce "github.com/c83a/Clash.Meta/common/once"
+	mihomoHttp "github.com/c83a/Clash.Meta/component/http"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 
 	"github.com/oschwald/maxminddb-golang"
 )

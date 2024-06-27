@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	mihomoHttp "github.com/metacubex/mihomo/component/http"
-	"github.com/metacubex/mihomo/component/mmdb"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
+	mihomoHttp "github.com/c83a/Clash.Meta/component/http"
+	"github.com/c83a/Clash.Meta/component/mmdb"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/log"
 )
 
 var (

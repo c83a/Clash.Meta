@@ -8,14 +8,14 @@ import (
 	"time"
 	"runtime"
 
-	"github.com/metacubex/mihomo/adapter/outbound"
-	"github.com/metacubex/mihomo/common/atomic"
-	"github.com/metacubex/mihomo/common/utils"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/constant/provider"
-	types "github.com/metacubex/mihomo/constant/provider"
-	"github.com/metacubex/mihomo/log"
-	"github.com/metacubex/mihomo/tunnel"
+	"github.com/c83a/Clash.Meta/adapter/outbound"
+	"github.com/c83a/Clash.Meta/common/atomic"
+	"github.com/c83a/Clash.Meta/common/utils"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/constant/provider"
+	types "github.com/c83a/Clash.Meta/constant/provider"
+	"github.com/c83a/Clash.Meta/log"
+	"github.com/c83a/Clash.Meta/tunnel"
 
 	"github.com/dlclark/regexp2"
 )

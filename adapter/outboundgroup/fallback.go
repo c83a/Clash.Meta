@@ -7,13 +7,13 @@ import (
 	"time"
 	"runtime"
 
-	"github.com/metacubex/mihomo/adapter/outbound"
-	"github.com/metacubex/mihomo/common/callback"
-	N "github.com/metacubex/mihomo/common/net"
-	"github.com/metacubex/mihomo/common/utils"
-	"github.com/metacubex/mihomo/component/dialer"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/constant/provider"
+	"github.com/c83a/Clash.Meta/adapter/outbound"
+	"github.com/c83a/Clash.Meta/common/callback"
+	N "github.com/c83a/Clash.Meta/common/net"
+	"github.com/c83a/Clash.Meta/common/utils"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/constant/provider"
 )
 
 type Fallback struct {

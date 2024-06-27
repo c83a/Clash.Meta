@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/metacubex/mihomo/common/atomic"
-	"github.com/metacubex/mihomo/common/queue"
-	"github.com/metacubex/mihomo/common/utils"
-	"github.com/metacubex/mihomo/component/ca"
-	"github.com/metacubex/mihomo/component/dialer"
-	C "github.com/metacubex/mihomo/constant"
+	"github.com/c83a/Clash.Meta/common/atomic"
+	"github.com/c83a/Clash.Meta/common/queue"
+	"github.com/c83a/Clash.Meta/common/utils"
+	"github.com/c83a/Clash.Meta/component/ca"
+	"github.com/c83a/Clash.Meta/component/dialer"
+	C "github.com/c83a/Clash.Meta/constant"
 	"github.com/puzpuzpuz/xsync/v3"
 )
 

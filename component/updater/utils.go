@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	mihomoHttp "github.com/metacubex/mihomo/component/http"
-	C "github.com/metacubex/mihomo/constant"
+	mihomoHttp "github.com/c83a/Clash.Meta/component/http"
+	C "github.com/c83a/Clash.Meta/constant"
 
 	"golang.org/x/exp/constraints"
 )

@@ -3,8 +3,8 @@ package ebpf
 import (
 	"net/netip"
 
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/transport/socks5"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/transport/socks5"
 )
 
 type TcEBpfProgram struct {

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/metacubex/mihomo/common/structure"
-	"github.com/metacubex/mihomo/common/utils"
-	"github.com/metacubex/mihomo/component/resource"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/constant/features"
-	types "github.com/metacubex/mihomo/constant/provider"
+	"github.com/c83a/Clash.Meta/common/structure"
+	"github.com/c83a/Clash.Meta/common/utils"
+	"github.com/c83a/Clash.Meta/component/resource"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/constant/features"
+	types "github.com/c83a/Clash.Meta/constant/provider"
 )
 
 var (

@@ -2,7 +2,7 @@ package context
 
 import (
 	"context"
-	"github.com/metacubex/mihomo/common/utils"
+	"github.com/c83a/Clash.Meta/common/utils"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/miekg/dns"

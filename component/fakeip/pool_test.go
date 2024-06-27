@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metacubex/mihomo/component/profile/cachefile"
-	"github.com/metacubex/mihomo/component/trie"
+	"github.com/c83a/Clash.Meta/component/profile/cachefile"
+	"github.com/c83a/Clash.Meta/component/trie"
 
 	"github.com/sagernet/bbolt"
 	"github.com/stretchr/testify/assert"

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net"
 
-	"github.com/metacubex/mihomo/common/sockopt"
-	"github.com/metacubex/mihomo/constant/features"
-	"github.com/metacubex/mihomo/context"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/common/sockopt"
+	"github.com/c83a/Clash.Meta/constant/features"
+	"github.com/c83a/Clash.Meta/context"
+	"github.com/c83a/Clash.Meta/log"
 
 	D "github.com/miekg/dns"
 )

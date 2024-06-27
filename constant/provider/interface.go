@@ -1,8 +1,8 @@
 package provider
 
 import (
-	"github.com/metacubex/mihomo/common/utils"
-	"github.com/metacubex/mihomo/constant"
+	"github.com/c83a/Clash.Meta/common/utils"
+	"github.com/c83a/Clash.Meta/constant"
 )
 
 // Vehicle Type

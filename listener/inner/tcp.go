@@ -5,10 +5,10 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
-	"github.com/metacubex/mihomo/adapter/inbound"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
 
-	N "github.com/metacubex/mihomo/common/net"
-	C "github.com/metacubex/mihomo/constant"
+	N "github.com/c83a/Clash.Meta/common/net"
+	C "github.com/c83a/Clash.Meta/constant"
 )
 
 var tunnel C.Tunnel

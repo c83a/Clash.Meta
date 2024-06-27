@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/metacubex/mihomo/common/pool"
-	"github.com/metacubex/mihomo/transport/ssr/tools"
+	"github.com/c83a/Clash.Meta/common/pool"
+	"github.com/c83a/Clash.Meta/transport/ssr/tools"
 
 	"github.com/metacubex/randv2"
 )

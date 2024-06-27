@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/metacubex/mihomo/common/utils"
+	"github.com/c83a/Clash.Meta/common/utils"
 	"github.com/openacid/low/bitmap"
 )
 

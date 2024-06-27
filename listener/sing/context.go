@@ -4,7 +4,7 @@ import (
 	"context"
 	"golang.org/x/exp/slices"
 
-	"github.com/metacubex/mihomo/adapter/inbound"
+	"github.com/c83a/Clash.Meta/adapter/inbound"
 
 	"github.com/sagernet/sing/common/auth"
 )

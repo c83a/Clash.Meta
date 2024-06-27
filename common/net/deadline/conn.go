@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/metacubex/mihomo/common/atomic"
+	"github.com/c83a/Clash.Meta/common/atomic"
 
 	"github.com/sagernet/sing/common/buf"
 	"github.com/sagernet/sing/common/bufio"

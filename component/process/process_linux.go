@@ -15,7 +15,7 @@ import (
 	"unicode"
 	"unsafe"
 
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/log"
 
 	"github.com/mdlayher/netlink"
 	tun "github.com/metacubex/sing-tun"

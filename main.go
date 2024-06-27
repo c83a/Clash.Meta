@@ -10,13 +10,13 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/metacubex/mihomo/component/updater"
-	"github.com/metacubex/mihomo/config"
-	C "github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/constant/features"
-	"github.com/metacubex/mihomo/hub"
-	"github.com/metacubex/mihomo/hub/executor"
-	"github.com/metacubex/mihomo/log"
+	"github.com/c83a/Clash.Meta/component/updater"
+	"github.com/c83a/Clash.Meta/config"
+	C "github.com/c83a/Clash.Meta/constant"
+	"github.com/c83a/Clash.Meta/constant/features"
+	"github.com/c83a/Clash.Meta/hub"
+	"github.com/c83a/Clash.Meta/hub/executor"
+	"github.com/c83a/Clash.Meta/log"
 
 	"go.uber.org/automaxprocs/maxprocs"
 )
