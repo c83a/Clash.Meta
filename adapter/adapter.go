@@ -24,7 +24,7 @@ import (
 var UnifiedDelay = atomic.NewBool(false)
 
 const (
-	defaultHistoriesNum = 10
+	defaultHistoriesNum = 1
 )
 
 type internalProxyState struct {
