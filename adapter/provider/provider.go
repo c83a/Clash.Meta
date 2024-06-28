@@ -333,6 +333,9 @@ func proxiesOnUpdate(pd *proxySetProvider) func([]C.Proxy) {
 		pd.setProxies(elm)
 		pd.version += 1
 		pd.getSubscriptionInfo()
+		if pd.healthCheck.extra != nil{
+			pd.HealthCheck()
+		}
 		pd.updateFollowerCache()
 	}
 }
