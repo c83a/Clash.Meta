@@ -1,11 +1,11 @@
 package queue
-
+/*
 import (
-//	"sync"
+	"sync"
 
 	"github.com/samber/lo"
 )
-
+*/
 // Queue is a simple concurrent safe queue
 type Queue[T any] struct {
 	items []T
@@ -14,10 +14,11 @@ type Queue[T any] struct {
 
 // Put add the item to the queue.
 func (q *Queue[T]) Put(items ...T) {
+	q.items[0] = items[0]
+/*
 	if len(items) == 0 {
 		return
 	}
-	q.items[0] = items[0]
 /*	q.lock.Lock()
 	q.items = append(q.items, items...)
 	q.lock.Unlock()
@@ -26,11 +27,11 @@ func (q *Queue[T]) Put(items ...T) {
 
 // Pop returns the head of items.
 func (q *Queue[T]) Pop() T {
+/*	q.lock.Lock()
 	if len(q.items) == 0 {
 		return lo.Empty[T]()
 	}
 
-/*	q.lock.Lock()
 	head := q.items[0]
 	q.items = q.items[1:]
 	q.lock.Unlock()
@@ -41,10 +42,10 @@ func (q *Queue[T]) Pop() T {
 
 // Last returns the last of item.
 func (q *Queue[T]) Last() T {
+/*
 	if len(q.items) == 0 {
 		return lo.Empty[T]()
 	}
-/*
 	q.lock.RLock()
 	last := q.items[len(q.items)-1]
 	q.lock.RUnlock()
@@ -71,7 +72,7 @@ func (q *Queue[T]) Len() int64 {
 /*	q.lock.Lock()
 	defer q.lock.Unlock()
 */
-	return int64(len(q.items))
+	return 1
 }
 
 // New is a constructor for a new concurrent safe queue.
