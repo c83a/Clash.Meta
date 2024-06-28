@@ -5,14 +5,13 @@ import (
 	"net"
 	"net/netip"
 	"time"
+	"strconv"
 
 	"github.com/c83a/Clash.Meta/common/atomic"
 	"github.com/c83a/Clash.Meta/common/buf"
 	N "github.com/c83a/Clash.Meta/common/net"
 //	"github.com/c83a/Clash.Meta/common/utils"
 	C "github.com/c83a/Clash.Meta/constant"
-	"sync"
-	"strconv"
 
 //	"github.com/gofrs/uuid/v5"
 )
@@ -34,16 +33,8 @@ type TrackerInfo struct {
 	Rule          string       `json:"rule"`
 	RulePayload   string       `json:"rulePayload"`
 }
-var tInfoPool sync.Pool
 var tInfoN atomic.Int64
-func init(){
-	tInfoPool = sync.Pool{
-		New: func()any{
-			return &TrackerInfo{
-			}
-		},
-	}
-}
+
 type tcpTracker struct {
 	C.Conn `json:"-"`
 	*TrackerInfo
@@ -120,7 +111,6 @@ func (tt *tcpTracker) UnwrapWriter() (io.Writer, []N.CountFunc) {
 
 func (tt *tcpTracker) Close() error {
 	tt.manager.Leave(tt)
-	tInfoPool.Put(tt.TrackerInfo)
 	return tt.Conn.Close()
 }
 
@@ -147,25 +137,12 @@ func NewTCPTracker(conn C.Conn, manager *Manager, metadata *C.Metadata, rule C.R
 	if conn != nil {
 		metadata.RemoteDst = parseRemoteDestination(conn.RemoteAddr(), conn)
 	}
-	ti := tInfoPool.Get().(*TrackerInfo)
-	ti.UUID = strconv.FormatInt(tInfoN.Add(1),16)
-	ti.Start = time.Now()
-	ti.Metadata = metadata
-	ti.Chain = conn.Chains()
-	ti.Rule = ""
-	ti.UploadTotal.Store(uploadTotal)
-	ti.DownloadTotal.Store(uploadTotal)
 	t := &tcpTracker{
 		Conn:    conn,
 		manager: manager,
-		TrackerInfo: ti,
-		pushToManager: pushToManager,
-	}
-/*	t := &tcpTracker{
-		Conn:    conn,
-		manager: manager,
 		TrackerInfo: &TrackerInfo{
-			UUID:          utils.NewUUIDV4(),
+//			UUID:          utils.NewUUIDV4(),
+			UUID: strconv.FormatInt(tInfoN.Add(1),16),
 			Start:         time.Now(),
 			Metadata:      metadata,
 			Chain:         conn.Chains(),
@@ -175,7 +152,7 @@ func NewTCPTracker(conn C.Conn, manager *Manager, metadata *C.Metadata, rule C.R
 		},
 		pushToManager: pushToManager,
 	}
-*/
+
 	if pushToManager {
 		if uploadTotal > 0 {
 			manager.PushUploaded(uploadTotal)
@@ -242,7 +219,6 @@ func (ut *udpTracker) WriteTo(b []byte, addr net.Addr) (int, error) {
 
 func (ut *udpTracker) Close() error {
 	ut.manager.Leave(ut)
-	tInfoPool.Put(ut.TrackerInfo)
 	return ut.PacketConn.Close()
 }
 
@@ -253,25 +229,12 @@ func (ut *udpTracker) Upstream() any {
 func NewUDPTracker(conn C.PacketConn, manager *Manager, metadata *C.Metadata, rule C.Rule, uploadTotal int64, downloadTotal int64, pushToManager bool) *udpTracker {
 	metadata.RemoteDst = parseRemoteDestination(nil, conn)
 
-	ti := tInfoPool.Get().(*TrackerInfo)
-	ti.UUID = strconv.FormatInt(tInfoN.Add(1),16)
-	ti.Start = time.Now()
-	ti.Metadata = metadata
-	ti.Chain = conn.Chains()
-	ti.Rule = ""
-	ti.UploadTotal.Store(uploadTotal)
-	ti.DownloadTotal.Store(uploadTotal)
 	ut := &udpTracker{
-		PacketConn: conn,
-		manager: manager,
-		TrackerInfo: ti,
-		pushToManager: pushToManager,
-	}
-/*	ut := &udpTracker{
 		PacketConn: conn,
 		manager:    manager,
 		TrackerInfo: &TrackerInfo{
-			UUID:          utils.NewUUIDV4(),
+//			UUID:          utils.NewUUIDV4(),
+			UUID: strconv.FormatInt(tInfoN.Add(1),16),
 			Start:         time.Now(),
 			Metadata:      metadata,
 			Chain:         conn.Chains(),
@@ -281,7 +244,7 @@ func NewUDPTracker(conn C.PacketConn, manager *Manager, metadata *C.Metadata, ru
 		},
 		pushToManager: pushToManager,
 	}
-*/
+
 	if pushToManager {
 		if uploadTotal > 0 {
 			manager.PushUploaded(uploadTotal)
