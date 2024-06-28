@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
-	"github.com/c83a/Clash.Meta/adapter/inbound"
 
 	N "github.com/c83a/Clash.Meta/common/net"
 	C "github.com/c83a/Clash.Meta/constant"
@@ -24,7 +23,7 @@ func HandleTcp(address string, proxy string) (conn net.Conn, err error) {
 	// executor Parsed
 	conn1, conn2 := N.Pipe()
 
-	metadata := inbound.Getm()
+	metadata := &C.Metadata{}
 	metadata.NetWork = C.TCP
 	metadata.Type = C.INNER
 	metadata.DNSMode = C.DNSNormal

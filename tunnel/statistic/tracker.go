@@ -9,7 +9,6 @@ import (
 	"github.com/c83a/Clash.Meta/common/atomic"
 	"github.com/c83a/Clash.Meta/common/buf"
 	N "github.com/c83a/Clash.Meta/common/net"
-	"github.com/c83a/Clash.Meta/adapter/inbound"
 //	"github.com/c83a/Clash.Meta/common/utils"
 	C "github.com/c83a/Clash.Meta/constant"
 	"sync"
@@ -122,7 +121,6 @@ func (tt *tcpTracker) UnwrapWriter() (io.Writer, []N.CountFunc) {
 
 func (tt *tcpTracker) Close() error {
 	tt.manager.Leave(tt)
-	inbound.Putm(tt.TrackerInfo.Metadata)
 	tInfoPool.Put(tt.TrackerInfo)
 	return tt.Conn.Close()
 }
@@ -245,7 +243,6 @@ func (ut *udpTracker) WriteTo(b []byte, addr net.Addr) (int, error) {
 
 func (ut *udpTracker) Close() error {
 	ut.manager.Leave(ut)
-	inbound.Putm(ut.TrackerInfo.Metadata)
 	tInfoPool.Put(ut.TrackerInfo)
 	return ut.PacketConn.Close()
 }

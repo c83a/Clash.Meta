@@ -12,7 +12,6 @@ import (
 	"github.com/c83a/Clash.Meta/component/dialer"
 	"github.com/c83a/Clash.Meta/component/resolver"
 	C "github.com/c83a/Clash.Meta/constant"
-	"github.com/c83a/Clash.Meta/adapter/inbound"
 	"github.com/c83a/Clash.Meta/tunnel"
 	"github.com/c83a/Clash.Meta/tunnel/statistic"
 )
@@ -36,7 +35,7 @@ func NewByName(proxyName string, dialer C.Dialer) (C.Dialer, error) {
 }
 
 func (p proxyDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	currentMeta := inbound.Getm()
+	currentMeta := &C.Metadata{}
 	currentMeta.Type=C.INNER
 	if err := currentMeta.SetRemoteAddress(address); err != nil {
 		return nil, err
@@ -72,7 +71,7 @@ func (p proxyDialer) DialContext(ctx context.Context, network, address string) (
 }
 
 func (p proxyDialer) ListenPacket(ctx context.Context, network, address string, rAddrPort netip.AddrPort) (net.PacketConn, error) {
-	currentMeta := inbound.Getm()
+	currentMeta := &C.Metadata{}
 	currentMeta.Type=C.INNER
 	currentMeta.DstIP=rAddrPort.Addr()
 	currentMeta.DstPort=rAddrPort.Port()

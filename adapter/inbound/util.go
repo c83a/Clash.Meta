@@ -6,34 +6,15 @@ import (
 	"net/netip"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/c83a/Clash.Meta/common/nnip"
 	C "github.com/c83a/Clash.Meta/constant"
 	"github.com/c83a/Clash.Meta/transport/socks5"
 )
-var mPool sync.Pool
-var m0 *C.Metadata
-func init(){
-	m0 = &C.Metadata{}
-	mPool = sync.Pool{New :func()any{
-		return &C.Metadata{}
-		},
-	}
-}
-func Getm() *C.Metadata{
-	m:=mPool.Get().(*C.Metadata)
-	return m
-}
 
-func Putm(m *C.Metadata){
-	t:=m.DstGeoIP[:0]
-	*m = *m0
-	m.DstGeoIP=t
-	mPool.Put(m)
-}
 func parseSocksAddr(target socks5.Addr) *C.Metadata {
-	metadata := Getm()
+	metadata := &C.Metadata{}
+
 	switch target[0] {
 	case socks5.AtypDomainName:
 		// trim for FQDN
@@ -66,23 +47,17 @@ func parseHTTPAddr(request *http.Request) *C.Metadata {
 		uint16Port = uint16(port)
 	}
 
-	m := Getm()
-	m.NetWork=C.TCP
-	m.Host=host
-	m.DstPort= uint16Port
-/*	metadata := &C.Metadata{
+	metadata := &C.Metadata{
 		NetWork: C.TCP,
 		Host:    host,
 		DstIP:   netip.Addr{},
 		DstPort: uint16Port,
 	}
-*/
+
 	ip, err := netip.ParseAddr(host)
 	if err == nil {
-		m.DstIP = ip
-	}else{
-		m.DstIP = netip.Addr{}
+		metadata.DstIP = ip
 	}
 
-	return m
+	return metadata
 }
