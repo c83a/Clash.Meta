@@ -35,12 +35,11 @@ type TrackerInfo struct {
 	RulePayload   string       `json:"rulePayload"`
 }
 var tInfoPool sync.Pool
+var tInfoN atomic.Int64
 func init(){
-	var tInfoN atomic.Int64
 	tInfoPool = sync.Pool{
 		New: func()any{
 			return &TrackerInfo{
-			UUID: strconv.FormatInt(tInfoN.Add(1),16),
 			}
 		},
 	}
@@ -149,7 +148,7 @@ func NewTCPTracker(conn C.Conn, manager *Manager, metadata *C.Metadata, rule C.R
 		metadata.RemoteDst = parseRemoteDestination(conn.RemoteAddr(), conn)
 	}
 	ti := tInfoPool.Get().(*TrackerInfo)
-	// ti.UUID = utils.NewUUIDV4()
+	ti.UUID = strconv.FormatInt(tInfoN.Add(1),16)
 	ti.Start = time.Now()
 	ti.Metadata = metadata
 	ti.Chain = conn.Chains()
@@ -255,7 +254,7 @@ func NewUDPTracker(conn C.PacketConn, manager *Manager, metadata *C.Metadata, ru
 	metadata.RemoteDst = parseRemoteDestination(nil, conn)
 
 	ti := tInfoPool.Get().(*TrackerInfo)
-	// ti.UUID = utils.NewUUIDV4()
+	ti.UUID = strconv.FormatInt(tInfoN.Add(1),16)
 	ti.Start = time.Now()
 	ti.Metadata = metadata
 	ti.Chain = conn.Chains()
