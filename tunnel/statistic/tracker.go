@@ -29,6 +29,7 @@ type TrackerInfo struct {
 	UploadTotal   atomic.Int64 `json:"upload"`
 	DownloadTotal atomic.Int64 `json:"download"`
 	Start         time.Time    `json:"start"`
+	Closed        bool         `json:"closed"`
 	Chain         C.Chain      `json:"chains"`
 	Rule          string       `json:"rule"`
 	RulePayload   string       `json:"rulePayload"`
@@ -110,6 +111,7 @@ func (tt *tcpTracker) UnwrapWriter() (io.Writer, []N.CountFunc) {
 }
 
 func (tt *tcpTracker) Close() error {
+	tt.TrackerInfo.Closed = true
 	tt.manager.Leave(tt)
 	return tt.Conn.Close()
 }
@@ -218,6 +220,7 @@ func (ut *udpTracker) WriteTo(b []byte, addr net.Addr) (int, error) {
 }
 
 func (ut *udpTracker) Close() error {
+	ut.TrackerInfo.Closed = true
 	ut.manager.Leave(ut)
 	return ut.PacketConn.Close()
 }
